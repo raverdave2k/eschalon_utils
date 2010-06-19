@@ -109,11 +109,11 @@ class MapGUI(BaseGUI):
             }
         }
 
-    def __init__(self, options, prefs):
+    def __init__(self, options, prefs, req_book):
         self.options = options
         self.prefs = prefs
         self.path_init()
-        self.req_book = 1
+        self.req_book = req_book
         c.switch_to_book(self.req_book)
 
         # Call out to the base initialization

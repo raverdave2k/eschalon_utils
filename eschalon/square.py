@@ -64,28 +64,6 @@ class Square(object):
         # ... aaand return our new object
         return newsquare
 
-    def read(self, df):
-        """ Given a file descriptor, read in the square. """
-
-        self.wall = df.readuchar()
-        self.floorimg = df.readuchar()
-        self.decalimg = df.readuchar()
-        self.wallimg = df.readuchar()
-        self.unknown5 = df.readuchar()
-        self.walldecalimg = df.readuchar()
-        self.scriptid = df.readuchar()
-
-    def write(self, df):
-        """ Write the square to the file. """
-
-        df.writeuchar(self.wall)
-        df.writeuchar(self.floorimg)
-        df.writeuchar(self.decalimg)
-        df.writeuchar(self.wallimg)
-        df.writeuchar(self.unknown5)
-        df.writeuchar(self.walldecalimg)
-        df.writeuchar(self.scriptid)
-
     def equals(self, square):
         """
         Compare ourselves to another square object.  We're just
@@ -195,3 +173,73 @@ class Square(object):
 
         # Return
         return "\n".join(ret)
+    
+    @staticmethod
+    def new(book, x, y, savegame):
+        """
+        Static method to initialize the correct object
+        """
+        if book == 1:
+            return B1Square(x, y, savegame)
+        else:
+            return B2Square(x, y, savegame)
+
+class B1Square(Square):
+    """
+    Square structure for Book 1
+    """
+
+    book = 1
+
+    def __init__(self, x, y, savegame):
+        # Note that we can ignore the savegame flag in book 1
+        super(B1Square, self).__init__(x, y)
+
+    def read(self, df):
+        """ Given a file descriptor, read in the square. """
+
+        self.wall = df.readuchar()
+        self.floorimg = df.readuchar()
+        self.decalimg = df.readuchar()
+        self.wallimg = df.readuchar()
+        self.unknown5 = df.readuchar()
+        self.walldecalimg = df.readuchar()
+        self.scriptid = df.readuchar()
+
+    def write(self, df):
+        """ Write the square to the file. """
+
+        df.writeuchar(self.wall)
+        df.writeuchar(self.floorimg)
+        df.writeuchar(self.decalimg)
+        df.writeuchar(self.wallimg)
+        df.writeuchar(self.unknown5)
+        df.writeuchar(self.walldecalimg)
+        df.writeuchar(self.scriptid)
+
+class B2Square(Square):
+    """
+    Square structure for Book 2
+    """
+
+    book = 2
+
+    def __init__(self, x, y, savegame):
+        super(B2Square, self).__init__(x, y)
+
+        # Book 2 specific vars
+        self.savegame = savegame
+        self.unknowni1 = -1
+
+    def read(self, df):
+        """ Given a file descriptor, read in the square. """
+
+        self.wall = df.readuchar()
+        self.floorimg = df.readuchar()
+        self.decalimg = df.readuchar()
+        self.wallimg = df.readuchar()
+        self.unknown5 = df.readuchar()
+        self.walldecalimg = df.readuchar()
+        self.scriptid = df.readuchar()
+        if self.savegame:
+            self.unknowni1 = df.readint()

@@ -153,9 +153,9 @@ def main(argv=None):
         # PyGTK installed, etc).  Not that this program follows PEP8-recommended
         # practices anyway, but I *am* aware that doing this is discouraged.
         from eschalon.mapgui import MapGUI
-        prog = MapGUI(options, Prefs(), 1)
+        prog = MapGUI(options, Prefs(), 2)
     else:
-        prog = MapCLI(options, Prefs(), 1)
+        prog = MapCLI(options, Prefs(), 2)
 
     # ... and run it
     return prog.run()

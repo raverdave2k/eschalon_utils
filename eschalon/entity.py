@@ -65,6 +65,81 @@ class Entity(object):
         # ... aaand return our new object
         return newentity
 
+    def equals(self, entity):
+        """
+        Compare ourselves to another entity object.  We're just
+        checking if our values are the same, NOT if we're *actually*
+        the same object.  Returns true for equality, false for inequality.
+        """
+        return (self.x == entity.x and
+                self.y == entity.y and
+                self.entid == entity.entid and
+                self.direction == entity.direction and
+                self.script == entity.script and
+                self.savegame == entity.savegame and
+                self.friendly == entity.friendly and
+                self.unknownc1 == entity.unknownc1 and
+                self.health == entity.health and
+                self.unknownc2 == entity.unknownc2 and
+                self.initial_loc == entity.initial_loc and
+                self.ent_zero1 == entity.ent_zero1 and
+                self.ent_zero2 == entity.ent_zero2)
+
+    def set_initial(self, x, y):
+        """
+        Set our initial_loc parameter, given actual (x,y) coordinates.
+        """
+        self.initial_loc = (y*100)+x
+
+    def display(self, unknowns=False):
+        """ Show a textual description of all fields. """
+
+        ret = []
+
+        if (self.entid in c.entitytable):
+            ret.append("\tEntity: %s" % (c.entitytable[self.entid].name))
+        else:
+            ret.append("\tEntity ID: %d" % (self.entid))
+        ret.append("\tMap Location: (%d, %d)" % (self.x, self.y))
+        if (self.direction in c.dirtable):
+            ret.append("\tFacing %s" % (c.dirtable[self.direction]))
+        else:
+            ret.append("\tDirection ID: %d" % (self.direction))
+        ret.append("\tScript: %s" % self.script)
+        if (self.savegame):
+            ret.append("\tFriendly: %d" % (self.friendly))
+            ret.append("\tHealth: %d" % (self.health))
+            ret.append("\tInitial Tile: %d" % self.initial_loc)
+            if (unknowns):
+                ret.append("\tUnknown value 1 (generally 1 or 2): %d" % self.unknownc1)
+                ret.append("\tUnknown value 2 (generally 0 or 1): %d" % self.unknownc2)
+                ret.append("\tUsually Zero (1): %d" % self.ent_zero1)
+                ret.append("\tUsually Zero (2): %d" % self.ent_zero2)
+        else:
+            ret.append( "\t(No extra attributes - this is the base map definition file)")
+
+        return "\n".join(ret)
+
+    @staticmethod
+    def new(book, savegame):
+        """
+        Static method to initialize the correct object
+        """
+        if book == 1:
+            return B1Entity(savegame)
+        else:
+            return B2Entity(savegame)
+
+class B1Entity(Square):
+    """
+    Entity structure for Book 1
+    """
+
+    book = 1
+
+    def __init__(self, savegame):
+        super(B1Entity, self).__init__(savegame)
+
     def read(self, df):
         """ Given a file descriptor, read in the entity. """
 
@@ -123,57 +198,47 @@ class Entity(object):
             self.ent_zero2 = 0
             self.set_initial(x, y)
 
-    def equals(self, entity):
-        """
-        Compare ourselves to another entity object.  We're just
-        checking if our values are the same, NOT if we're *actually*
-        the same object.  Returns true for equality, false for inequality.
-        """
-        return (self.x == entity.x and
-                self.y == entity.y and
-                self.entid == entity.entid and
-                self.direction == entity.direction and
-                self.script == entity.script and
-                self.savegame == entity.savegame and
-                self.friendly == entity.friendly and
-                self.unknownc1 == entity.unknownc1 and
-                self.health == entity.health and
-                self.unknownc2 == entity.unknownc2 and
-                self.initial_loc == entity.initial_loc and
-                self.ent_zero1 == entity.ent_zero1 and
-                self.ent_zero2 == entity.ent_zero2)
+class B2Entity(Square):
+    """
+    Entity structure for Book 2
+    """
 
-    def set_initial(self, x, y):
-        """
-        Set our initial_loc parameter, given actual (x,y) coordinates.
-        """
-        self.initial_loc = (y*100)+x
+    book = 2
 
-    def display(self, unknowns=False):
-        """ Show a textual description of all fields. """
+    def __init__(self, savegame):
+        super(B2Entity, self).__init__(savegame)
 
-        ret = []
+    def read(self, df):
+        """ Given a file descriptor, read in the entity. """
 
-        if (self.entid in c.entitytable):
-            ret.append("\tEntity: %s" % (c.entitytable[self.entid].name))
-        else:
-            ret.append("\tEntity ID: %d" % (self.entid))
-        ret.append("\tMap Location: (%d, %d)" % (self.x, self.y))
-        if (self.direction in c.dirtable):
-            ret.append("\tFacing %s" % (c.dirtable[self.direction]))
-        else:
-            ret.append("\tDirection ID: %d" % (self.direction))
-        ret.append("\tScript: %s" % self.script)
+        # We throw an exception because there seems to be an arbitrary
+        # number of entities in the file, and no 'entity count' anywhere.
+        # TODO: verify that the count isn't in the main map file.
+        if (df.eof()):
+            raise FirstItemLoadException('Reached EOF')
+
+        # ... everything else
+        self.entid = df.readuchar()
+        self.x = df.readuchar()
+        self.y = df.readuchar()
+        self.direction = df.readuchar()
+        self.script = df.readstr()
         if (self.savegame):
-            ret.append("\tFriendly: %d" % (self.friendly))
-            ret.append("\tHealth: %d" % (self.health))
-            ret.append("\tInitial Tile: %d" % self.initial_loc)
-            if (unknowns):
-                ret.append("\tUnknown value 1 (generally 1 or 2): %d" % self.unknownc1)
-                ret.append("\tUnknown value 2 (generally 0 or 1): %d" % self.unknownc2)
-                ret.append("\tUsually Zero (1): %d" % self.ent_zero1)
-                ret.append("\tUsually Zero (2): %d" % self.ent_zero2)
-        else:
-            ret.append( "\t(No extra attributes - this is the base map definition file)")
+            # No idea about any of these
+            df.readuchar()
+            df.readuchar()
+            df.readint()
+            df.readuchar()
+            df.readuchar()
+            df.readuchar()
+            for i in range(26):
+                df.readint()
+            df.readshort()
 
-        return "\n".join(ret)
+    def tozero(self, x, y):
+        """ Zeroes out the entity object.  Apart from x and y, which are passed in. """
+        self.x = x
+        self.y = y
+        self.entid = 1
+        self.direction = 1
+        self.script = ''
