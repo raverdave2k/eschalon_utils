@@ -175,14 +175,14 @@ class Square(object):
         return "\n".join(ret)
     
     @staticmethod
-    def new(book, x, y, savegame):
+    def new(book, x, y):
         """
         Static method to initialize the correct object
         """
         if book == 1:
-            return B1Square(x, y, savegame)
+            return B1Square(x, y)
         else:
-            return B2Square(x, y, savegame)
+            return B2Square(x, y)
 
 class B1Square(Square):
     """
@@ -194,6 +194,10 @@ class B1Square(Square):
     def __init__(self, x, y, savegame):
         # Note that we can ignore the savegame flag in book 1
         super(B1Square, self).__init__(x, y)
+
+        # Book 1 specific vars
+        self.unknown5 = -1
+        # This var is *probably* actually part of the wall ID, like in book 2
 
     def read(self, df):
         """ Given a file descriptor, read in the square. """
@@ -224,11 +228,11 @@ class B2Square(Square):
 
     book = 2
 
-    def __init__(self, x, y, savegame):
+    def __init__(self, x, y):
         super(B2Square, self).__init__(x, y)
 
         # Book 2 specific vars
-        self.savegame = savegame
+        self.savegame = False
         self.unknowni1 = -1
 
     def read(self, df):
@@ -237,8 +241,7 @@ class B2Square(Square):
         self.wall = df.readuchar()
         self.floorimg = df.readuchar()
         self.decalimg = df.readuchar()
-        self.wallimg = df.readuchar()
-        self.unknown5 = df.readuchar()
+        self.wallimg = df.readshort()
         self.walldecalimg = df.readuchar()
         self.scriptid = df.readuchar()
         if self.savegame:

@@ -248,7 +248,7 @@ class MapGUI(BaseGUI):
         self.prefs_init(self.prefs)
         if (not self.require_gfx()):
             return
-        self.gfx = Gfx(self.prefs, self.datadir)
+        self.gfx = Gfx.new(self.req_book, self.prefs, self.datadir)
 
         # Register ComboBoxEntry child objects since the new Glade doesn't
         comboboxentries = ['exit_north', 'exit_east', 'exit_south', 'exit_west',
@@ -369,6 +369,9 @@ class MapGUI(BaseGUI):
         # Set up our initial zoom levels and connect our signal to
         # the slider adjustment, so things work like we'd want.
         self.zoom_levels = [4, 8, 16, 24, 32, 52]
+        if self.req_book == 2:
+            self.zoom_levels.append(64)
+        self.get_widget('map_zoom_adj').set_upper(len(self.zoom_levels)-1)
         default_zoom = self.prefs.get_int('mapgui', 'default_zoom')-1
         if (default_zoom >= len(self.zoom_levels)):
             default_zoom = len(self.zoom_levels)-1
@@ -597,7 +600,7 @@ class MapGUI(BaseGUI):
         # Figure out what our initial path should be
         path = ''
         if (self.map == None):
-            path = self.prefs.get_str('paths', 'savegames')
+            path = self.get_current_savegame_dir()
         else:
             path = os.path.dirname(os.path.realpath(self.map.df.filename))
 
@@ -650,7 +653,7 @@ class MapGUI(BaseGUI):
 
         # Load the file, if we can
         try:
-            map = Map(filename)
+            map = Map.load(filename, None, self.req_book)
             map.read()
         except LoadException, e:
             print e
@@ -683,7 +686,7 @@ class MapGUI(BaseGUI):
         # If we appear to be editing a global map file and haven't
         # been told otherwise, show a dialog warning the user
         warn = self.prefs.get_bool('mapgui', 'warn_global_map')
-        if (not map.is_savegame() and warn and filename.find(self.prefs.get_str('paths', 'gamedir')) != -1):
+        if (not map.is_savegame() and warn and filename.find(self.get_current_gamedir()) != -1):
             self.globalwarn_check.set_active(warn)
             resp = self.globalwarndialog.run()
             self.globalwarndialog.hide()
@@ -985,7 +988,7 @@ class MapGUI(BaseGUI):
 
     def on_draw_wall_changed(self, widget):
         """ Update the appropriate image when necessary. """
-        (pixbuf, height) = self.gfx.get_object(widget.get_value_as_int(), None, True)
+        (pixbuf, height, offset) = self.gfx.get_object(widget.get_value_as_int(), None, True)
         if (pixbuf is None):
             self.get_widget('draw_wall_img').set_from_stock(gtk.STOCK_EDIT, 2)
         else:
@@ -1368,13 +1371,13 @@ class MapGUI(BaseGUI):
         table.attach(align, 2, 3, row, row+1)
 
     def input_uchar(self, page, table, row, name, text, tooltip=None, signal=None):
-        self.input_spin(page, table, row, name, text, 255, tooltip, signal)
+        self.input_spin(page, table, row, name, text, 0xFF, tooltip, signal)
 
     def input_short(self, page, table, row, name, text, tooltip=None):
-        self.input_spin(page, table, row, name, text, 65535, tooltip)
+        self.input_spin(page, table, row, name, text, 0xFFFF, tooltip)
 
     def input_int(self, page, table, row, name, text, tooltip=None):
-        self.input_spin(page, table, row, name, text, 4294967295, tooltip)
+        self.input_spin(page, table, row, name, text, 0xFFFFFFFF, tooltip)
 
     def input_dropdown(self, page, table, row, name, text, values, tooltip=None, signal=None):
         self.input_label(page, table, row, name, text)
@@ -2126,19 +2129,35 @@ class MapGUI(BaseGUI):
             self.diff_x = 0
             self.diff_y = 0
             self.maparea.window.set_cursor(self.cursor_move_drag)
-        elif (action == self.ACTION_EDIT):
-            if (self.sq_y < len(self.map.squares)):
-                if (self.sq_x < len(self.map.squares[self.sq_y])):
-                    self.undo.store(self.sq_x, self.sq_y)
-                    self.populate_squarewindow_from_square(self.map.squares[self.sq_y][self.sq_x])
-                    self.get_widget('squarelabel').set_markup('<b>Map Tile (%d, %d)</b>' % (self.sq_x, self.sq_y))
-                    self.squarewindow.show()
-        elif (action == self.ACTION_DRAW):
-            self.drawing = True
-            self.action_draw_square(self.sq_x, self.sq_y)
-        elif (action == self.ACTION_ERASE):
-            self.erasing = True
-            self.action_erase_square(self.sq_x, self.sq_y)
+        elif self.req_book == 1:
+            if (action == self.ACTION_EDIT):
+                if (self.sq_y < len(self.map.squares)):
+                    if (self.sq_x < len(self.map.squares[self.sq_y])):
+                        self.undo.store(self.sq_x, self.sq_y)
+                        self.populate_squarewindow_from_square(self.map.squares[self.sq_y][self.sq_x])
+                        self.get_widget('squarelabel').set_markup('<b>Map Tile (%d, %d)</b>' % (self.sq_x, self.sq_y))
+                        self.squarewindow.show()
+            elif (action == self.ACTION_DRAW):
+                self.drawing = True
+                self.action_draw_square(self.sq_x, self.sq_y)
+            elif (action == self.ACTION_ERASE):
+                self.erasing = True
+                self.action_erase_square(self.sq_x, self.sq_y)
+        else:
+            # Book 2 stupid reporting (for now)
+            square = self.map.squares[self.sq_y][self.sq_x]
+            if square:
+                print "Square at (%d, %d)" % (self.sq_x, self.sq_y)
+                print "   Barrier Flag: %d" % (square.wall)
+                print "   Floor: %d" % (square.floorimg)
+                print "   Decal: %d" % (square.decalimg)
+                print "   Wall: %d" % (square.wallimg)
+                print "   Wall Decal: %d" % (square.walldecalimg)
+                print "   Unknown: %d" % (square.unknown5)
+                print "   Script ID: %d" % (square.scriptid)
+                if square.entity:
+                    print "   Entity ID: %d" % (square.entity.entid)
+                print
 
     def on_released(self, widget=None, event=None):
         if (self.dragging or self.drawing or self.erasing):
@@ -2488,7 +2507,7 @@ class MapGUI(BaseGUI):
                 sq_ctx.paint()
                 drawn = True
                 # Check to see if we should draw a flame
-                if (square.decalimg == 52):
+                if (self.req_book == 1 and square.decalimg == 52):
                     pixbuf = self.gfx.get_flame(self.curzoom)
                     if (pixbuf is not None):
                         xoffset = self.z_halfwidth-int(pixbuf.get_width()/2)
@@ -2496,28 +2515,36 @@ class MapGUI(BaseGUI):
                         sq_ctx.set_source_surface(pixbuf, xoffset, self.z_3xheight+yoffset)
                         sq_ctx.paint()
 
-        # Draw the object
         wallid = square.wallimg
-        if (self.object_toggle.get_active() and wallid<161):
-            (pixbuf, pixheight) = self.gfx.get_object(wallid, self.curzoom)
+        try:
+            walltype = self.gfx.wall_types[wallid]
+        except KeyError:
+            # This should only happen for Book 2 maps, and should only
+            # denote that it's one of the gigantic graphic maps.
+            print 'Unknown wall type %d' % (wallid)
+            walltype = self.gfx.TYPE_NONE
+
+        # Draw the object
+        if (self.object_toggle.get_active() and walltype == self.gfx.TYPE_OBJ):
+            (pixbuf, pixheight, offset) = self.gfx.get_object(wallid, self.curzoom)
             if (pixbuf is not None):
-                sq_ctx.set_source_surface(pixbuf, 0, self.z_height*(4-pixheight))
+                sq_ctx.set_source_surface(pixbuf, offset, self.z_height*(4-pixheight))
                 sq_ctx.paint()
                 drawn = True
 
         # Draw walls
-        if (self.wall_toggle.get_active() and wallid<251 and wallid>160):
-            (pixbuf, pixheight) = self.gfx.get_object(wallid, self.curzoom)
+        if (self.wall_toggle.get_active() and walltype == self.gfx.TYPE_WALL):
+            (pixbuf, pixheight, offset) = self.gfx.get_object(wallid, self.curzoom)
             if (pixbuf is not None):
-                sq_ctx.set_source_surface(pixbuf, 0, self.z_height*(4-pixheight))
+                sq_ctx.set_source_surface(pixbuf, offset, self.z_height*(4-pixheight))
                 sq_ctx.paint()
                 drawn = True
 
         # Draw trees
-        if (self.tree_toggle.get_active() and wallid>250):
-            (pixbuf, pixheight) = self.gfx.get_object(wallid, self.curzoom)
+        if (self.tree_toggle.get_active() and walltype == self.gfx.TYPE_TREE):
+            (pixbuf, pixheight, offset) = self.gfx.get_object(wallid, self.curzoom, False, self.map.tree_set)
             if (pixbuf is not None):
-                sq_ctx.set_source_surface(pixbuf, 0, self.z_height*(4-pixheight))
+                sq_ctx.set_source_surface(pixbuf, offset, self.z_height*(4-pixheight))
                 sq_ctx.paint()
                 drawn = True
 
@@ -2529,7 +2556,7 @@ class MapGUI(BaseGUI):
                 sq_ctx.paint()
                 drawn = True
                 # Check to see if we should draw a flame
-                if (square.walldecalimg == 17 or square.walldecalimg == 18):
+                if (self.req_book == 1 and (square.walldecalimg == 17 or square.walldecalimg == 18)):
                     pixbuf = self.gfx.get_flame(self.curzoom)
                     if (pixbuf is not None):
                         xoffset = int(pixbuf.get_width()*0.3)
@@ -2546,7 +2573,7 @@ class MapGUI(BaseGUI):
         op_surf = self.squarebuf
         op_ctx = sq_ctx
         op_xoffset = 0
-        if (square.entity is not None and self.entity_toggle.get_active()):
+        if (self.req_book == 1 and square.entity is not None and self.entity_toggle.get_active()):
             ent_img = self.gfx.get_entity(square.entity.entid, square.entity.direction, self.curzoom)
             if (ent_img is not None):
                 if (ent_img.get_width() > self.curzoom):

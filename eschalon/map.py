@@ -21,6 +21,7 @@
 
 import os
 import struct
+from eschalon import constants as c
 from eschalon.savefile import Savefile, LoadException, FirstItemLoadException
 from eschalon.square import Square
 from eschalon.mapscript import Mapscript
@@ -38,7 +39,7 @@ class Map(object):
     DIR_W = 0x40
     DIR_NW = 0x80
 
-    def __init__(self, filename):
+    def __init__(self, df):
         """
         A fresh object.
         """
@@ -82,12 +83,12 @@ class Map(object):
         for i in range(200):
             self.squares.append([])
             for j in range(100):
-                self.squares[i].append(Square.new(c.book, j, i, self.is_savegame()))
+                self.squares[i].append(Square.new(c.book, j, i))
 
         self.scripts = []
         self.entities = []
 
-        self.df = Savefile(filename)
+        self.df = df
         self.set_df_ent()
 
     def set_df_ent(self):
@@ -300,14 +301,16 @@ class Map(object):
         # vary) - at that point, Book 2 goes into some integer data whereas Book
         # 1 has a couple more strings.  The first two binary bytes in Book 2 seem
         # to each *always* be 0x01, so that's how we'll differentiate
-        try:
-            df.open_r()
-            for i in range(9):
-                df.readstr()
-            c1 = df.readuchar()
-            c2 = df.readuchar()
-        except (IOError, struct.error), e:
-            raise LoadException(str(e))
+        if book is None:
+            try:
+                df.open_r()
+                for i in range(9):
+                    df.readstr()
+                c1 = df.readuchar()
+                c2 = df.readuchar()
+                df.close()
+            except (IOError, struct.error), e:
+                raise LoadException(str(e))
 
         if c1 == 1 or c2 == 1:
             book = 2
@@ -332,7 +335,6 @@ class B1Map(Map):
     """
 
     def __init__(self, df):
-        super(B1Map, self).__init__(df)
 
         # Book 1-specific vars
         self.mapid = -1
@@ -347,6 +349,9 @@ class B1Map(Map):
         self.savegame_1 = -1
         self.savegame_2 = -1
         self.savegame_3 = -1
+
+        # Base class attributes
+        super(B1Map, self).__init__(df)
 
     def read(self):
         """ Read in the whole map from a file descriptor. """
@@ -381,6 +386,13 @@ class B1Map(Map):
             self.savegame_1 = self.df.readint()
             self.savegame_2 = self.df.readint()
             self.savegame_3 = self.df.readint()
+
+            # Set the savegame flag on our squares, now that we
+            # have enough information to do so
+            is_savegame = self.is_savegame()
+            for row in self.squares:
+                for square in row:
+                    square.savegame = is_savegame
 
             # Squares
             for i in range(200*100):
@@ -484,7 +496,6 @@ class B2Map(Map):
     """
 
     def __init__(self, df):
-        super(B2Map, self).__init__(df)
 
         # Book 2 specific vars
         self.openingscript = ''
@@ -506,6 +517,9 @@ class B2Map(Map):
         self.unknownstr4 = ''
         self.unknownstr5 = ''
         self.unknownstr6 = ''
+
+        # Now the base attributes
+        super(B2Map, self).__init__(df)
 
     def read(self):
         """ Read in the whole map from a file descriptor. """

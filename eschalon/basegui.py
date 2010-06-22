@@ -233,18 +233,23 @@ class BaseGUI(object):
         widget.hide()
         return True
 
+    def gamedir_set_b1(self):
+        return (os.path.isfile(os.path.join(self.prefsobj.get_str('paths', 'gamedir'), 'gfx.pak')))
+
+    def gamedir_set_b2(self):
+        return (os.path.isfile(os.path.join(self.prefsobj.get_str('paths', 'gamedir_b2'), 'gfx', 'zombie.png')))
+
     def gamedir_set(self, book=None):
         if book is None:
             if c.book == 1:
-                var = 'gamedir'
+                return self.gamedir_set_b1()
             else:
-                var = 'gamedir_b2'
+                return self.gamedir_set_b2()
         else:
             if book == 1:
-                var ='gamedir'
+                return self.gamedir_set_b1()
             else:
-                var = 'gamedir_b2'
-        return (os.path.isfile(os.path.join(self.prefsobj.get_str('paths', var), 'gfx.pak')))
+                return self.gamedir_set_b2()
 
     def get_current_savegame_dir(self):
         """
@@ -254,6 +259,15 @@ class BaseGUI(object):
             return self.prefsobj.get_str('paths', 'savegames')
         else:
             return self.prefsobj.get_str('paths', 'savegames_b2')
+
+    def get_current_gamedir(self):
+        """
+        Returns the appropriate gamedir, depending on if we're book 1 or 2
+        """
+        if c.book == 1:
+            return self.prefsobj.get_str('paths', 'gamedir')
+        else:
+            return self.prefsobj.get_str('paths', 'gamedir_b2')
 
     def optional_gfx(self):
         if (not self.gamedir_set()):

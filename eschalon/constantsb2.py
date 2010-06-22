@@ -365,3 +365,154 @@ class B2Constants:
             12: 'Female #6',
             4294967295: 'Custom'
         }
+
+    # Right now this is the only one that appears to exist
+    scriptflags = {
+            0x40: 'destructible'
+        }
+
+    traptable = {
+            0: 'none',
+            1: 'Poison Dart',
+            2: 'Bixby\'s Noxious Cloud',
+            3: 'Powder Blast',
+            4: 'Festering Stew',
+            5: 'Naga Bite',
+            6: 'Acid Bath',
+            7: 'Hellfire',
+            8: 'Plaguebath'
+        }
+
+    containertable = {
+            0: 'none',
+            1: 'closed',
+            2: 'open',
+            3: 'broken',
+            4: 'toggle 1',
+            5: 'toggle 2'
+        }
+
+    objecttypetable = {
+            0: '(none)',
+            1: 'Container (no open/close change - barrels, hives, sacs, coffins)',
+            2: 'Container (corpses)',
+            3: 'Container (chests, dressers, etc)',
+            4: 'Container (only one in game, avoid this one)',
+            5: 'Door',
+            6: 'Map Link',
+            7: 'Well, Lever, or other Misc Items',
+            9: 'Message (wall decals - plaques, bookcases)',
+            10: 'Message (walls - signs, gravestones)',
+            11: 'Sealed Barrel',
+            12: 'Miscellaneous Script',
+            13: 'Sconce',
+            14: 'Trap / Teleporter / Other tile-triggered actions',
+            15: 'Blackpowder Keg',
+            25: 'Light Source',
+            30: 'Sound Generator (Inn)',
+            31: 'Sound Generator (Church)',
+            32: 'Sound Generator (Windy)',
+            33: 'Sound Generator (Running Water)',
+            34: 'Sound Generator (Magic Shop)',
+            35: 'Sound Generator (Blacksmith)',
+            36: 'Sound Generator (Woodland)',
+            37: 'Sound Generator (Crowd)',
+            38: 'Sound Generator (Waterfall)',
+        }
+
+    class EntHelper(object):
+        def __init__(self, name, health, gfxfile):
+            self.name = name
+            self.health = health
+            self.gfxfile = gfxfile
+
+    # Entities
+    entitytable = {
+
+            # Enemies
+            0x01: EntHelper('Fanged Salamander', 9, 1),
+            0x02: EntHelper('Bloodsipper', 17, 2),
+            0x03: EntHelper('Raptor', 95, 3),
+            0x04: EntHelper('Noximander', 35, 4),
+            0x05: EntHelper('Fungal Slime', 25, 5),
+            0x06: EntHelper('Walking Corpse', 55, 6),
+            0x07: EntHelper('Acid Grubb', 70, 7),
+            0x08: EntHelper('Timberland Giant', 140, 8),
+            0x09: EntHelper('Goblin Hacker', 38, 9),
+            0x0A: EntHelper('Goblin Archer', 45, 10),
+            0x0B: EntHelper('Goblin Warlord', 75, 11),
+            0x0C: EntHelper('Hive Drone', 40, 12),
+            0x0D: EntHelper('Hive Queen', 100, 13),
+            0x0E: EntHelper('Thug', 40, 14),
+            0x0F: EntHelper('Dimensional Eye', 80, 15),
+            0x10: EntHelper('Giant Arachnid', 70, 16),
+            0x11: EntHelper('Dirachnid', 250, 17),
+            0x12: EntHelper('Skeleton', 50, 18),
+            0x13: EntHelper('Goblin Bombthug', 15, 19),
+            0x14: EntHelper('Poltergeist', 60, 20),
+            0x15: EntHelper('Barrea Mercenary', 90, 21),
+            0x16: EntHelper('Taurax', 140, 22),
+            0x17: EntHelper('Spire Guard', 300, 60),
+
+            # NPCs
+            0x33: EntHelper('Maddock', 15, 51),
+            0x34: EntHelper('Michael', 36, 52),
+            0x35: EntHelper('Farwick', 50, 53),
+            0x36: EntHelper('Abygale', 25, 62),
+            0x37: EntHelper('Eleanor *', 1, 55),
+            0x38: EntHelper('Garrett *', 1, 50),
+            0x39: EntHelper('Porter', 32, 56),
+            0x3A: EntHelper('Oswell *', 1, 58),
+            0x3B: EntHelper('Lilith', 130, 54),
+            0x3C: EntHelper('Town Guard', 120, 60),
+            0x3D: EntHelper('Gruzz', 16, 9),
+            0x3E: EntHelper('Gatekeeper', 45, 60),
+            0x3F: EntHelper('Eeru', 50, 65),
+            0x40: EntHelper('Erik', 45, 53),
+            0x41: EntHelper('Darkford Guard', 120, 60),
+            0x42: EntHelper('Gunther', 85, 53),
+            0x43: EntHelper('Leurik', 22, 65),
+            0x44: EntHelper('Vault Master', 5, 9),
+            0x45: EntHelper('Paul', 15, 51),
+            0x46: EntHelper('Krista', 70, 57),
+            0x47: EntHelper('Gamfari', 20, 64),
+            0x48: EntHelper('Larrus *', 1, 66),
+            0x49: EntHelper('Mary', 2, 63),
+            0x4A: EntHelper('Vekkar *', 1, 67),
+            0x4B: EntHelper('Jonathon', 36, 52),
+            0x4C: EntHelper('Shady Character (1)', 90, 14),
+            0x4D: EntHelper('Oolaseph *', 1, 54),
+            0x4E: EntHelper('Vault Guard', 50, 60),
+            0x4F: EntHelper('Vidar the Knife', 50, 14),
+            0x50: EntHelper('Walter', 15, 68),
+            0x51: EntHelper('Azure Guard', 120, 60),
+            0x52: EntHelper('Captain Morgan', 120, 60),
+            0x53: EntHelper('Erubor', 80, 69),
+            0x54: EntHelper('Shadowmirk Acolyte', 15, 68),
+            0x55: EntHelper('Phillip', 15, 65),
+            0x56: EntHelper('Omar', 140, 8),
+            0x57: EntHelper('Gramuk', 45, 70),
+            0x58: EntHelper('Shady Character (2)', 110, 14),
+            0x5A: EntHelper('Chancellor Malcolm *', 4, 71),
+            0x5B: EntHelper('Sonya', 160, 59),
+            0x5C: EntHelper('Aaron', 70, 61),
+            0x5D: EntHelper('Penelope', 2, 62),
+            0x5E: EntHelper('Siam', 80, 65),
+            0x5F: EntHelper('William', 60, 51),
+            0x60: EntHelper('Hesham', 60, 65)
+        }
+
+    # Various lists to keep track of which objects should be walls
+    wall_list = {}
+    wall_list['floor_seethrough'] = range(83, 103) + [126]
+    wall_list['decal_blocked'] = [55]
+    wall_list['decal_seethrough'] = [52, 71, 83, 84, 96, 170]
+    wall_list['wall_blocked'] = (range(23, 31) + range(68, 72) + range(80, 85) +
+        range(109, 112) + range(116, 121) + range(125, 144) +
+        range(145, 156) + range(161, 214) + range(251, 256) + 
+        [38, 40, 43, 49, 50, 58, 59, 79, 89, 101, 103, 105, 107, 215, 216, 219, 220])
+    wall_list['wall_seethrough'] = (range(1, 23) + range(31, 38) + range(44, 49) +
+        range(51, 56) + range(60, 68) + range(72, 79) +
+        range(85, 89) + range(112, 116) + range(121, 125) +
+        [39, 41, 42, 57, 144, 214])
+    wall_list['walldecal_seethrough'] = [19, 20]

@@ -130,7 +130,7 @@ class Entity(object):
         else:
             return B2Entity(savegame)
 
-class B1Entity(Square):
+class B1Entity(Entity):
     """
     Entity structure for Book 1
     """
@@ -198,7 +198,7 @@ class B1Entity(Square):
             self.ent_zero2 = 0
             self.set_initial(x, y)
 
-class B2Entity(Square):
+class B2Entity(Entity):
     """
     Entity structure for Book 2
     """

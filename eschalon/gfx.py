@@ -187,6 +187,12 @@ class PakIndex(object):
 class Gfx(object):
     """ A class to hold graphics data. """
 
+    wall_types = {}
+    TYPE_NONE = -1
+    TYPE_OBJ = 1
+    TYPE_WALL = 2
+    TYPE_TREE = 3
+
     def __init__(self, prefs, datadir):
         """ A fresh object with no data. """
 
@@ -197,32 +203,14 @@ class Gfx(object):
 
         self.restrict_ents = [50, 55, 58, 66, 67, 71]
 
-        self.unknownh1 = -1
-        self.unknownh2 = -1
-        self.numfiles = -1
-        self.compressed_idx_size = -1
-        self.unknowni1 = -1
-        self.loaded = False
-        self.fileindex = {}
-        self.zeroindex = -1
-        self.initialread()
-
-    def initialread(self):
-        """ Read in the main file index. """
-
-        df = self.df
-        df.open_r()
-        header = df.read(4)
-        if (header != '!PAK'):
-            df.close()
-            raise LoadException('Invalid PAK header')
-        
-        # Initial Values
-        self.unknownh1 = df.readshort()
-        self.unknownh2 = df.readshort()
-        self.numfiles = df.readint()
-        self.compressed_idx_size = df.readint()
-        self.unknowni1 = df.readint()
+        # wtf @ needing this (is the same for B1 and B2)
+        self.treemap = {
+            251: 4,
+            252: 5,
+            253: 1,
+            254: 2,
+            255: 3
+            }
 
         # Some graphic-specific indexes/flags
         self.itemcache = None
@@ -237,28 +225,71 @@ class Gfx(object):
         self.entcache = {}
         self.flamecache = None
 
-        # wtf @ needing this
-        self.treemap = {
-            251: 4,
-            252: 5,
-            253: 1,
-            254: 2,
-            255: 3
-            }
+        # Now do an initial read
+        self.loaded = False
+        self.initialread()
 
-        # Now load in the index
-        decobj = zlib.decompressobj()
-        indexdata = decobj.decompress(df.read())
-        self.zeroindex = df.tell() - len(decobj.unused_data)
-        decobj = None
-        for i in range(self.numfiles):
-            index = PakIndex(indexdata[:272])
-            indexdata = indexdata[272:]
-            self.fileindex[index.filename] = index
-
-        # Close and clean up
-        df.close()
+    def initialread(self):
+        """
+        Anything that needs to be done to initialize loading
+        the graphics.  Should be overridden by implementing classes
+        if needed
+        """
         self.loaded = True
+
+    def surface_to_pixbuf(self, surface):
+        """
+        Helper function to convert a Cairo surface to a GDK Pixbuf.  It's
+        very slow, don't use it if you need speed.  It's probably about as
+        fast as you're going to get, though, since every other method I've
+        found would require you to loop through and fix each pixel in the
+        pixbuf afterwards.
+        """
+        df = StringIO.StringIO()
+        surface.write_to_png(df)
+        loader = gtk.gdk.PixbufLoader()
+        loader.write(df.getvalue())
+        loader.close()
+        df.close()
+        return loader.get_pixbuf()
+
+    @staticmethod
+    def new(book, prefs, datadir):
+        """
+        Returns a B1Gfx or B2Gfx object, depending on the book that we're working with
+        """
+        if book == 1:
+            return B1Gfx(prefs, datadir)
+        else:
+            return B2Gfx(prefs, datadir)
+
+class B1Gfx(Gfx):
+    """
+    Grphics structure for Book 1
+    """
+
+    book = 1
+    wall_types = {}
+
+    def __init__(self, prefs, datadir):
+        super(B1Gfx, self).__init__(prefs, datadir)
+
+        # Wall object types
+        for i in range(161):
+            self.wall_types[i] = self.TYPE_OBJ
+        for i in range(161, 251):
+            self.wall_types[i] = self.TYPE_OBJ
+        for i in range(251, 256):
+            self.wall_types[i] = self.TYPE_TREE
+
+        # Book 1 specific vars (just the PAK structure stuff)
+        self.unknownh1 = -1
+        self.unknownh2 = -1
+        self.numfiles = -1
+        self.compressed_idx_size = -1
+        self.unknowni1 = -1
+        self.fileindex = {}
+        self.zeroindex = -1
 
     def readfile(self, filename):
         """ Reads a given filename out of the PAK. """
@@ -277,6 +308,37 @@ class Gfx(object):
                 raise LoadException('Filename %s not found in archive' % (filename))
         else:
             raise LoadException('PAK Index has not been loaded')
+
+    def initialread(self):
+        """ Read in the main file index. """
+
+        df = self.df
+        df.open_r()
+        header = df.read(4)
+        if (header != '!PAK'):
+            df.close()
+            raise LoadException('Invalid PAK header')
+        
+        # Initial Values
+        self.unknownh1 = df.readshort()
+        self.unknownh2 = df.readshort()
+        self.numfiles = df.readint()
+        self.compressed_idx_size = df.readint()
+        self.unknowni1 = df.readint()
+
+        # Now load in the index
+        decobj = zlib.decompressobj()
+        indexdata = decobj.decompress(df.read())
+        self.zeroindex = df.tell() - len(decobj.unused_data)
+        decobj = None
+        for i in range(self.numfiles):
+            index = PakIndex(indexdata[:272])
+            indexdata = indexdata[272:]
+            self.fileindex[index.filename] = index
+
+        # Close and clean up
+        df.close()
+        self.loaded = True
 
     def get_item(self, itemnum, size=None, gdk=True):
         if (self.itemcache is None):
@@ -298,28 +360,32 @@ class Gfx(object):
         return self.decalcache.getimg(decalnum, size, gdk)
 
     # Returns a tuple, first item is the surface, second is the extra height to add while drawing
-    def get_object(self, objnum, size=None, gdk=False):
+    def get_object(self, objnum, size=None, gdk=False, treeset=0):
+        """
+        Note that we ignore the treeset flag in book 1
+        """
+        # TODO: switch to using the wall_types stuff
         if (objnum == 0):
-            return (None, 0)
+            return (None, 0, 0)
         if (objnum < 101):
             if (self.objcache1 is None):
                 self.objcache1 = GfxCache(self.readfile('iso_tileset_obj_a.png'), 52, 52, 6)
-            return (self.objcache1.getimg(objnum, size, gdk), 1)
+            return (self.objcache1.getimg(objnum, size, gdk), 1, 0)
         elif (objnum < 161):
             if (self.objcache2 is None):
                 self.objcache2 = GfxCache(self.readfile('iso_tileset_obj_b.png'), 52, 78, 6)
-            return (self.objcache2.getimg(objnum-100, size, gdk), 2)
+            return (self.objcache2.getimg(objnum-100, size, gdk), 2, 0)
         elif (objnum < 251):
             if (self.objcache3 is None):
                 self.objcache3 = GfxCache(self.readfile('iso_tileset_obj_c.png'), 52, 78, 6)
-            return (self.objcache3.getimg(objnum-160, size, gdk), 2)
+            return (self.objcache3.getimg(objnum-160, size, gdk), 2, 0)
         else:
             if (self.objcache4 is None):
                 self.objcache4 = GfxCache(self.readfile('iso_trees.png'), 52, 130, 5)
             if (objnum in self.treemap):
-                return (self.objcache4.getimg(self.treemap[objnum], size, gdk), 4)
+                return (self.objcache4.getimg(self.treemap[objnum], size, gdk), 4, 0)
             else:
-                return (None, 4)
+                return (None, 4, 0)
 
     def get_object_decal(self, decalnum, size=None, gdk=False):
         if (decalnum == 0):
@@ -371,18 +437,133 @@ class Gfx(object):
                 self.avatarcache[avatarnum] = GfxCache(self.readfile('%d.png' % (avatarnum)), 60, 60, 1).pixbuf
         return self.avatarcache[avatarnum]
 
-    def surface_to_pixbuf(self, surface):
+class B2Gfx(Gfx):
+    """
+    Graphics structure for Book 2
+    """
+
+    book = 2
+    wall_types = {}
+
+    def __init__(self, prefs, datadir):
+        super(B2Gfx, self).__init__(prefs, datadir)
+
+        # Wall object types
+        for i in range(251):
+            self.wall_types[i] = self.TYPE_OBJ
+        for i in range(251, 256):
+            self.wall_types[i] = self.TYPE_TREE
+        for i in range(256, 513):
+            self.wall_types[i] = self.TYPE_WALL
+        
+        # Store our gamedir
+        self.gamedir = self.prefs.get_str('paths', 'gamedir_b2')
+
+        # Other stuff
+        self.treecache = [ None, None, None ]
+
+    def readfile(self, filename):
         """
-        Helper function to convert a Cairo surface to a GDK Pixbuf.  It's
-        very slow, don't use it if you need speed.  It's probably about as
-        fast as you're going to get, though, since every other method I've
-        found would require you to loop through and fix each pixel in the
-        pixbuf afterwards.
+        Reads a given filename.
         """
-        df = StringIO.StringIO()
-        surface.write_to_png(df)
-        loader = gtk.gdk.PixbufLoader()
-        loader.write(df.getvalue())
-        loader.close()
-        df.close()
-        return loader.get_pixbuf()
+        if self.loaded:
+            df = open(os.path.join(self.gamedir, 'gfx', filename))
+            filedata = df.read()
+            df.close()
+            return filedata
+        else:
+            raise LoadException('We haven\'t initialized ourselves yet')
+
+    def get_item(self, itemnum, size=None, gdk=True):
+        if (self.itemcache is None):
+            self.itemcache = GfxCache(self.readfile('items_mastersheet.png'), 42, 42, 10)
+        return self.itemcache.getimg(itemnum+1, size, gdk)
+
+    def get_floor(self, floornum, size=None, gdk=False):
+        if (floornum == 0):
+            return None
+        if (self.floorcache is None):
+            self.floorcache = GfxCache(self.readfile('iso_base.png'), 64, 32, 8)
+        return self.floorcache.getimg(floornum, size, gdk)
+
+    def get_decal(self, decalnum, size=None, gdk=False):
+        if (decalnum == 0):
+            return None
+        if (self.decalcache is None):
+            self.decalcache = GfxCache(self.readfile('iso_basedecals.png'), 64, 32, 16)
+        return self.decalcache.getimg(decalnum, size, gdk)
+
+    # Returns a tuple, first item is the surface, second is the extra height to add while drawing
+    def get_object(self, objnum, size=None, gdk=False, treeset=0):
+        try:
+            walltype = self.wall_types[objnum]
+        except TypeError:
+            #print "unknown objnum: %d" % (objnum)
+            return (None, 0, 0)
+        if (walltype == self.TYPE_OBJ):
+            if (self.objcache1 is None):
+                self.objcache1 = GfxCache(self.readfile('iso_obj.png'), 64, 64, 16)
+            return (self.objcache1.getimg(objnum, size, gdk), 1, 0)
+        elif (walltype == self.TYPE_WALL):
+            if (self.objcache2 is None):
+                self.objcache2 = GfxCache(self.readfile('iso_walls.png'), 64, 96, 16)
+            return (self.objcache2.getimg(objnum-255, size, gdk), 2, 0)
+        elif (walltype == self.TYPE_TREE):
+            if (self.treecache[treeset] is None):
+                self.treecache[treeset] = GfxCache(self.readfile('iso_trees%d.png' % (treeset)), 96, 160, 5)
+            if (objnum in self.treemap):
+                # note the size difference for Book 2 trees (50% wider)
+                offset = -int(size * 1.5)/4
+                return (self.treecache[treeset].getimg(self.treemap[objnum], size, gdk), 4, offset)
+            else:
+                return (None, 4, 0)
+
+    def get_object_decal(self, decalnum, size=None, gdk=False):
+        if (decalnum == 0):
+            return None
+        if (self.objdecalcache is None):
+            self.objdecalcache = GfxCache(self.readfile('iso_objdecals.png'), 64, 96, 16)
+        return self.objdecalcache.getimg(decalnum, size, gdk)
+
+    def get_flame(self, size=None, gdk=False):
+        """
+        Grabs the flame graphic, so it's clear when viewing maps.  I provide my own
+        image here instead of using the game's because the file bundled with the game
+        doesn't have transparency information, and I don't feel like doing a conversion.
+        """
+        if (self.flamecache is None):
+            df = open(os.path.join(self.datadir, 'torch_single.png'), 'rb')
+            flamedata = df.read()
+            df.close()
+            self.flamecache = GfxEntCache(flamedata, 1, 1)
+        # TODO: I don't like hardcoding "64" here
+        if (size is None):
+            size = 64
+        return self.flamecache.getimg(1, int(size*self.flamecache.size_scale), gdk)
+
+    def get_entity(self, entnum, direction, size=None, gdk=False):
+        entnum = c.entitytable[entnum].gfxfile
+        if (entnum not in self.entcache):
+            filename = 'mo%d.png' % (entnum)
+            if (entnum in self.restrict_ents):
+                self.entcache[entnum] = GfxEntCache(self.readfile(filename), 2, 1)
+            else:
+                self.entcache[entnum] = GfxEntCache(self.readfile(filename))
+        cache = self.entcache[entnum]
+        # TODO: I don't like hardcoding "64" here...
+        if (size is None):
+            size = 64
+        return cache.getimg(direction, int(size*cache.size_scale), gdk)
+
+    def get_avatar(self, avatarnum):
+        if (avatarnum < 0 or avatarnum > 7):
+            return None
+        if (avatarnum not in self.avatarcache):
+            if (avatarnum == 7):
+                if (os.path.exists(os.path.join(self.prefs.get_str('paths', 'gamedir'), 'mypic.png'))):
+                    self.avatarcache[avatarnum] = gtk.gdk.pixbuf_new_from_file(os.path.join(self.prefs.get_str('paths', 'gamedir'), 'mypic.png'))
+                else:
+                    return None
+            else:
+                self.avatarcache[avatarnum] = GfxCache(self.readfile('%d.png' % (avatarnum)), 60, 60, 1).pixbuf
+        return self.avatarcache[avatarnum]
