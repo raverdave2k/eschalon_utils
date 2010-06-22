@@ -387,13 +387,6 @@ class B1Map(Map):
             self.savegame_2 = self.df.readint()
             self.savegame_3 = self.df.readint()
 
-            # Set the savegame flag on our squares, now that we
-            # have enough information to do so
-            is_savegame = self.is_savegame()
-            for row in self.squares:
-                for square in row:
-                    square.savegame = is_savegame
-
             # Squares
             for i in range(200*100):
                 self.addsquare()
@@ -563,6 +556,13 @@ class B2Map(Map):
             self.unknownstr4 = self.df.readstr()
             self.unknownstr5 = self.df.readstr()
             self.unknownstr6 = self.df.readstr()
+
+            # Set the savegame flag on our squares, now that we
+            # have enough information to do so
+            is_savegame = self.is_savegame()
+            for row in self.squares:
+                for square in row:
+                    square.savegame = is_savegame
 
             # Squares
             for i in range(200*100):
