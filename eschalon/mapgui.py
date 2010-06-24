@@ -1147,8 +1147,8 @@ class MapGUI(BaseGUI):
         self.z_5xheight = self.z_height*5
 
         # Our squarebuf size (the one we draw squares onto) may vary based on book
-        self.z_squarebuf_w = self.z_width * self.gfx.squarebuf_mult
-        self.z_squarebuf_offset = (self.z_squarebuf_w - self.z_width)/2
+        self.z_squarebuf_w = int(self.z_width * self.gfx.squarebuf_mult)
+        self.z_squarebuf_offset = int((self.z_squarebuf_w - self.z_width)/2)
 
         # Clean up our zoom icons
         if (scalenum == 0):

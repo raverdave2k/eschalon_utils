@@ -515,8 +515,8 @@ class B2Gfx(Gfx):
                 self.treecache[treeset] = GfxCache(self.readfile('iso_trees%d.png' % (treeset)), 96, 160, 5)
             if (objnum in self.treemap):
                 # note the size difference for Book 2 trees (50% wider)
-                offset = -size/4
-                size = size * 1.5
+                offset = -int(size/4)
+                size = int(size * 1.5)
                 return (self.treecache[treeset].getimg(self.treemap[objnum], size, gdk), 4, offset)
             else:
                 return (None, 4, 0)
