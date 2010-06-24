@@ -139,7 +139,7 @@ class GfxCache(object):
                 self.gdkcache[number][sizex] = self.gdkcache[number]['orig'].scale_simple(sizex, sizey, gtk.gdk.INTERP_BILINEAR)
             return self.gdkcache[number][sizex]
 
-class GfxEntCache(GfxCache):
+class B1GfxEntCache(GfxCache):
     """
     A class to hold image data about entity graphics.  Mostly we're just
     overloading the constructor here, since we'd rather not hard-code what
@@ -149,7 +149,7 @@ class GfxEntCache(GfxCache):
     def __init__(self, pngdata, cols=15, rows=8):
 
         # Read in the data as usual, with junk for width and height
-        super(GfxEntCache, self).__init__(pngdata, -1, -1, 1)
+        super(B1GfxEntCache, self).__init__(pngdata, -1, -1, 1)
 
         # ... and now that we have the image dimensions, fix that junk
         imgwidth = self.surface.get_width()
@@ -166,6 +166,49 @@ class GfxEntCache(GfxCache):
         newctx.set_source_surface(self.surface, 0, 0)
         newctx.paint()
         self.surface = newsurf
+
+        # (and on our pixbuf copy as well)
+        if (self.gdkcache is not None):
+            newbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, self.width, imgheight)
+            self.pixbuf.copy_area(0, 0, self.width, imgheight, newbuf, 0, 0)
+            self.pixbuf = newbuf
+
+class B2GfxEntCache(GfxCache):
+    """
+    A class to hold image data about entity graphics.  We're doing all kinds
+    of things here to support Book 2.
+    """
+    def __init__(self, ent, pngdata):
+
+        # Read in the data as usual, with junk for width and height
+        super(B2GfxEntCache, self).__init__(pngdata, -1, -1, 1)
+
+        # Figure out various dimensions
+        imgwidth = self.surface.get_width()
+        imgheight = self.surface.get_height()
+        self.width = ent.width
+        self.height = ent.height
+        cols = int(imgwidth/ent.width)
+        #print '%s - %d x %d: %d cols' % (ent.name, self.width, self.height, cols)
+
+        # Some information on size scaling
+        self.size_scale = self.width/64.0
+
+        # Construct an abbreviated image with just one frame per direction
+        newsurf = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height*ent.dirs)
+        newctx = cairo.Context(newsurf)
+        newctx.save()
+        for i in range(ent.dirs):
+            frame = ent.frames * i
+            col = (frame % cols)
+            row = int(frame / cols)
+            newctx.set_operator(cairo.OPERATOR_SOURCE)
+            newctx.set_source_surface(self.surface, -row*self.width, -col*self.height + (i*self.height))
+            newctx.rectangle(0, i*self.height, self.width, self.height)
+            newctx.fill()
+        newctx.restore()
+        self.surface = newsurf
+        #newsurf.write_to_png('computed_%s' % (ent.gfxfile))
 
         # (and on our pixbuf copy as well)
         if (self.gdkcache is not None):
@@ -200,8 +243,6 @@ class Gfx(object):
         self.datadir = datadir
         self.pakloc = os.path.join(self.prefs.get_str('paths', 'gamedir'), 'gfx.pak')
         self.df = Savefile(self.pakloc)
-
-        self.restrict_ents = [50, 55, 58, 66, 67, 71]
 
         # wtf @ needing this (is the same for B1 and B2)
         self.treemap = {
@@ -282,6 +323,9 @@ class B1Gfx(Gfx):
             self.wall_types[i] = self.TYPE_OBJ
         for i in range(251, 256):
             self.wall_types[i] = self.TYPE_TREE
+
+        # Restricted entities (only one direction)
+        self.restrict_ents = [50, 55, 58, 66, 67, 71]
 
         # Book 1 specific vars (just the PAK structure stuff)
         self.unknownh1 = -1
@@ -405,7 +449,7 @@ class B1Gfx(Gfx):
             df = open(os.path.join(self.datadir, 'torch_single.png'), 'rb')
             flamedata = df.read()
             df.close()
-            self.flamecache = GfxEntCache(flamedata, 1, 1)
+            self.flamecache = B1GfxEntCache(flamedata, 1, 1)
         # TODO: I don't like hardcoding "52" here
         if (size is None):
             size = 52
@@ -416,9 +460,9 @@ class B1Gfx(Gfx):
         if (entnum not in self.entcache):
             filename = 'mo%d.png' % (entnum)
             if (entnum in self.restrict_ents):
-                self.entcache[entnum] = GfxEntCache(self.readfile(filename), 2, 1)
+                self.entcache[entnum] = B1GfxEntCache(self.readfile(filename), 2, 1)
             else:
-                self.entcache[entnum] = GfxEntCache(self.readfile(filename))
+                self.entcache[entnum] = B1GfxEntCache(self.readfile(filename))
         cache = self.entcache[entnum]
         # TODO: I don't like hardcoding "52" here...
         if (size is None):
@@ -538,20 +582,17 @@ class B2Gfx(Gfx):
             df = open(os.path.join(self.datadir, 'torch_single.png'), 'rb')
             flamedata = df.read()
             df.close()
-            self.flamecache = GfxEntCache(flamedata, 1, 1)
+            self.flamecache = B2GfxEntCache(flamedata, 1, 1)
         # TODO: I don't like hardcoding "64" here
         if (size is None):
             size = 64
         return self.flamecache.getimg(1, int(size*self.flamecache.size_scale), gdk)
 
     def get_entity(self, entnum, direction, size=None, gdk=False):
-        entnum = c.entitytable[entnum].gfxfile
+        ent = c.entitytable[entnum]
         if (entnum not in self.entcache):
-            filename = 'mo%d.png' % (entnum)
-            if (entnum in self.restrict_ents):
-                self.entcache[entnum] = GfxEntCache(self.readfile(filename), 2, 1)
-            else:
-                self.entcache[entnum] = GfxEntCache(self.readfile(filename))
+            filename = ent.gfxfile
+            self.entcache[entnum] = B2GfxEntCache(ent, self.readfile(filename))
         cache = self.entcache[entnum]
         # TODO: I don't like hardcoding "64" here...
         if (size is None):

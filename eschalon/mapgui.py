@@ -20,6 +20,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import os
+import csv
 import sys
 import time
 import traceback
@@ -250,6 +251,9 @@ class MapGUI(BaseGUI):
             return
         self.gfx = Gfx.new(self.req_book, self.prefs, self.datadir)
 
+        # Now that we're sure we have a data dir, load in our entities
+        self.populate_entities()
+
         # Register ComboBoxEntry child objects since the new Glade doesn't
         comboboxentries = ['exit_north', 'exit_east', 'exit_south', 'exit_west',
                 'soundfile1', 'soundfile2', 'soundfile3', 'skybox']
@@ -468,6 +472,36 @@ class MapGUI(BaseGUI):
 
         # ... and get into the main gtk loop
         gtk.main()
+
+    def populate_entities(self):
+        """
+        Populates our entities, if need be.
+        (Currently only does things for Book 2, since they can be sourced from
+        a CSV file)
+        """
+        # x / y sizing
+        # 0 / 0 1024x1024, sixteen to a row
+        # 0 / 32 1024x1024, sixteen to a row
+        # 32 / 0 1024x1024, ten to a row
+        # 32 / 32 2048x2048, twenty-one to a row (with some left over)
+        # 64 / 64 2048x2048, sixteen to a row
+        if self.req_book != 2:
+            return
+        file = os.path.join(self.get_current_gamedir(), 'data', 'entities.csv')
+        reader = csv.DictReader(open(file))
+        for row in reader:
+            xoff = int(row['Xoff'])
+            yoff = int(row['Yoff'])
+            width = 64 + xoff
+            height = 64 + yoff
+            c.entitytable[int(row['ID'])] = c.EntHelper(row['Name'],
+                int(row['HP']),
+                '%s.png' % (row['file']),
+                int(row['Dirs']),
+                int(row['Align']),
+                width,
+                height,
+                int(row['Frame']))
 
     def putstatus(self, text):
         """ Pushes a message to the status bar """
@@ -2418,11 +2452,19 @@ class MapGUI(BaseGUI):
             pointer = (1, 1, 1, 0.5)
 
         if (square.entity is not None):
-            entity = True
-            if (square.entity.friendly == 1):
-                entity = (0, 1, 0, 0.5)
+            if self.req_book == 1 or self.map.is_savegame():
+                if (square.entity.friendly == 1):
+                    entity = (0, 1, 0, 0.5)
+                else:
+                    entity = (1, 0, 0, 0.5)
             else:
-                entity = (1, 0, 0, 0.5)
+                if square.entity.entid in c.entitytable:
+                    if c.entitytable[square.entity.entid].friendly == 1:
+                        entity = (0, 1, 0, 0.5)
+                    else:
+                        entity = (1, 0, 0, 0.5)
+                else:
+                    entity = (1, 0, 0, 0.5)
 
         if (square.scriptid != 0 and len(square.scripts) > 0):
             script = (1, 1, 0, 0.5)
@@ -2577,10 +2619,10 @@ class MapGUI(BaseGUI):
         op_surf = self.squarebuf
         op_ctx = sq_ctx
         op_xoffset = 0
-        if (self.req_book == 1 and square.entity is not None and self.entity_toggle.get_active()):
+        if (square.entity is not None and self.entity_toggle.get_active()):
             ent_img = self.gfx.get_entity(square.entity.entid, square.entity.direction, self.curzoom)
             if (ent_img is not None):
-                if (ent_img.get_width() > self.curzoom):
+                if (ent_img.get_width() > self.z_squarebuf_w):
                     self.ent_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, ent_img.get_width(), self.z_5xheight)
                     self.ent_ctx = cairo.Context(self.ent_surf)
                     op_xoffset = int((ent_img.get_width()-self.curzoom)/2)
@@ -2588,7 +2630,11 @@ class MapGUI(BaseGUI):
                     self.ent_ctx.paint()
                     op_surf = self.ent_surf
                     op_ctx = self.ent_ctx
-                op_ctx.set_source_surface(ent_img, 0, self.z_5xheight-ent_img.get_height())
+                if (op_surf.get_width() > ent_img.get_width()):
+                    offset = int((op_surf.get_width() - ent_img.get_width())/2)
+                else:
+                    offset = 0
+                op_ctx.set_source_surface(ent_img, offset, self.z_5xheight-ent_img.get_height())
                 op_ctx.paint()
                 drawn = True
 
@@ -2736,7 +2782,6 @@ class MapGUI(BaseGUI):
         basic_ctx.line_to(self.z_squarebuf_offset+self.z_halfwidth, self.z_5xheight)
         basic_ctx.close_path()
         basic_ctx.fill()
-        self.basicsquare.write_to_png('test.png')
 
         # Draw the squares
         for y in range(len(self.map.squares)):
