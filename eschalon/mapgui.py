@@ -1146,6 +1146,10 @@ class MapGUI(BaseGUI):
         self.z_4xheight = self.z_height*4
         self.z_5xheight = self.z_height*5
 
+        # Our squarebuf size (the one we draw squares onto) may vary based on book
+        self.z_squarebuf_w = self.z_width * self.gfx.squarebuf_mult
+        self.z_squarebuf_offset = (self.z_squarebuf_w - self.z_width)/2
+
         # Clean up our zoom icons
         if (scalenum == 0):
             self.zoom_out_button.set_sensitive(False)
@@ -2471,7 +2475,7 @@ class MapGUI(BaseGUI):
         if (do_main_paint and usecache and not pointer):
             main_ctx.save()
             main_ctx.set_operator(cairo.OPERATOR_SOURCE)
-            main_ctx.rectangle(x1, top, self.z_width, height)
+            main_ctx.rectangle(x1-self.z_squarebuf_offset, top, self.z_squarebuf_w, height)
             main_ctx.set_source_surface(self.guicache, 0, 0)
             main_ctx.fill()
             main_ctx.restore()
@@ -2495,7 +2499,7 @@ class MapGUI(BaseGUI):
         if (self.floor_toggle.get_active()):
             pixbuf = self.gfx.get_floor(square.floorimg, self.curzoom)
             if (pixbuf is not None):
-                sq_ctx.set_source_surface(pixbuf, 0, self.z_4xheight)
+                sq_ctx.set_source_surface(pixbuf, self.z_squarebuf_offset, self.z_4xheight)
                 sq_ctx.paint()
                 drawn = True
 
@@ -2503,7 +2507,7 @@ class MapGUI(BaseGUI):
         if (self.decal_toggle.get_active()):
             pixbuf = self.gfx.get_decal(square.decalimg, self.curzoom)
             if (pixbuf is not None):
-                sq_ctx.set_source_surface(pixbuf, 0, self.z_4xheight)
+                sq_ctx.set_source_surface(pixbuf, self.z_squarebuf_offset, self.z_4xheight)
                 sq_ctx.paint()
                 drawn = True
                 # Check to see if we should draw a flame
@@ -2528,7 +2532,7 @@ class MapGUI(BaseGUI):
         if (self.object_toggle.get_active() and walltype == self.gfx.TYPE_OBJ):
             (pixbuf, pixheight, offset) = self.gfx.get_object(wallid, self.curzoom)
             if (pixbuf is not None):
-                sq_ctx.set_source_surface(pixbuf, offset, self.z_height*(4-pixheight))
+                sq_ctx.set_source_surface(pixbuf, offset+self.z_squarebuf_offset, self.z_height*(4-pixheight))
                 sq_ctx.paint()
                 drawn = True
 
@@ -2536,7 +2540,7 @@ class MapGUI(BaseGUI):
         if (self.wall_toggle.get_active() and walltype == self.gfx.TYPE_WALL):
             (pixbuf, pixheight, offset) = self.gfx.get_object(wallid, self.curzoom)
             if (pixbuf is not None):
-                sq_ctx.set_source_surface(pixbuf, offset, self.z_height*(4-pixheight))
+                sq_ctx.set_source_surface(pixbuf, offset+self.z_squarebuf_offset, self.z_height*(4-pixheight))
                 sq_ctx.paint()
                 drawn = True
 
@@ -2544,7 +2548,7 @@ class MapGUI(BaseGUI):
         if (self.tree_toggle.get_active() and walltype == self.gfx.TYPE_TREE):
             (pixbuf, pixheight, offset) = self.gfx.get_object(wallid, self.curzoom, False, self.map.tree_set)
             if (pixbuf is not None):
-                sq_ctx.set_source_surface(pixbuf, offset, self.z_height*(4-pixheight))
+                sq_ctx.set_source_surface(pixbuf, offset+self.z_squarebuf_offset, self.z_height*(4-pixheight))
                 sq_ctx.paint()
                 drawn = True
 
@@ -2552,7 +2556,7 @@ class MapGUI(BaseGUI):
         if (self.objectdecal_toggle.get_active()):
             pixbuf = self.gfx.get_object_decal(square.walldecalimg, self.curzoom)
             if (pixbuf is not None):
-                sq_ctx.set_source_surface(pixbuf, 0, self.z_2xheight)
+                sq_ctx.set_source_surface(pixbuf, self.z_squarebuf_offset, self.z_2xheight)
                 sq_ctx.paint()
                 drawn = True
                 # Check to see if we should draw a flame
@@ -2620,11 +2624,11 @@ class MapGUI(BaseGUI):
             if (usecache):
                 # We only get here when we're the pointer
                 self.composite_simple(op_ctx, op_surf, pointer)
-                main_ctx.set_source_surface(op_surf, x1-op_xoffset, top-buftop)
+                main_ctx.set_source_surface(op_surf, x1-op_xoffset-self.z_squarebuf_offset, top-buftop)
                 main_ctx.paint()
             else:
                 # This is only for the initial map population
-                self.guicache_ctx.set_source_surface(op_surf, x1-op_xoffset, top-buftop)
+                self.guicache_ctx.set_source_surface(op_surf, x1-op_xoffset-self.z_squarebuf_offset, top-buftop)
                 self.guicache_ctx.paint()
 
         return (op_surf, op_xoffset)
@@ -2691,7 +2695,7 @@ class MapGUI(BaseGUI):
         self.ctx.set_source_rgba(0, 0, 0, 1)
         self.ctx.paint()
 
-        self.squarebuf = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.z_width, self.z_5xheight)
+        self.squarebuf = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.z_squarebuf_w, self.z_5xheight)
         self.squarebuf_ctx = cairo.Context(self.squarebuf)
         self.guicache = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.z_mapsize_x, self.z_mapsize_y)
         self.guicache_ctx = cairo.Context(self.guicache)
@@ -2715,7 +2719,7 @@ class MapGUI(BaseGUI):
             self.erase_barrier.set_sensitive(False)
 
         # Set up a "blank" tile to draw everything else on top of
-        self.blanksquare = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.z_width, self.z_5xheight)
+        self.blanksquare = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.z_squarebuf_w, self.z_5xheight)
         sq_ctx = cairo.Context(self.blanksquare)
         sq_ctx.save()
         sq_ctx.set_operator(cairo.OPERATOR_CLEAR)
@@ -2723,15 +2727,16 @@ class MapGUI(BaseGUI):
         sq_ctx.restore()
 
         # Set up a default square with just a black tile, for otherwise-empty tiles
-        self.basicsquare = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.z_width, self.z_5xheight)
+        self.basicsquare = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.z_squarebuf_w, self.z_5xheight)
         basic_ctx = cairo.Context(self.basicsquare)
         basic_ctx.set_source_rgba(0, 0, 0, 1)
-        basic_ctx.move_to(0, self.z_4xheight+self.z_halfheight)
-        basic_ctx.line_to(self.z_halfwidth, self.z_4xheight)
-        basic_ctx.line_to(self.z_width, self.z_4xheight+self.z_halfheight)
-        basic_ctx.line_to(self.z_halfwidth, self.z_5xheight)
+        basic_ctx.move_to(self.z_squarebuf_offset+0, self.z_4xheight+self.z_halfheight)
+        basic_ctx.line_to(self.z_squarebuf_offset+self.z_halfwidth, self.z_4xheight)
+        basic_ctx.line_to(self.z_squarebuf_offset+self.z_width, self.z_4xheight+self.z_halfheight)
+        basic_ctx.line_to(self.z_squarebuf_offset+self.z_halfwidth, self.z_5xheight)
         basic_ctx.close_path()
         basic_ctx.fill()
+        self.basicsquare.write_to_png('test.png')
 
         # Draw the squares
         for y in range(len(self.map.squares)):

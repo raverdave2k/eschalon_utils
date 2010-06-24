@@ -270,6 +270,7 @@ class B1Gfx(Gfx):
 
     book = 1
     wall_types = {}
+    squarebuf_mult = 1
 
     def __init__(self, prefs, datadir):
         super(B1Gfx, self).__init__(prefs, datadir)
@@ -444,6 +445,7 @@ class B2Gfx(Gfx):
 
     book = 2
     wall_types = {}
+    squarebuf_mult = 1.5
 
     def __init__(self, prefs, datadir):
         super(B2Gfx, self).__init__(prefs, datadir)
@@ -513,8 +515,9 @@ class B2Gfx(Gfx):
                 self.treecache[treeset] = GfxCache(self.readfile('iso_trees%d.png' % (treeset)), 96, 160, 5)
             if (objnum in self.treemap):
                 # note the size difference for Book 2 trees (50% wider)
+                offset = -size/4
                 size = size * 1.5
-                return (self.treecache[treeset].getimg(self.treemap[objnum], size, gdk), 4, -size/4)
+                return (self.treecache[treeset].getimg(self.treemap[objnum], size, gdk), 4, offset)
             else:
                 return (None, 4, 0)
 
