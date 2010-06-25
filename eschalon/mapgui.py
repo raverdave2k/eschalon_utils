@@ -2194,7 +2194,11 @@ class MapGUI(BaseGUI):
                 print "   Unknown: %d" % (square.unknown5)
                 print "   Script ID: %d" % (square.scriptid)
                 if square.entity:
-                    print "   Entity ID: %d" % (square.entity.entid)
+                    if square.entity.entid in c.entitytable:
+                        extra = '- %s ' % (c.entitytable[square.entity.entid].name)
+                    else:
+                        extra = ''
+                    print "   Entity ID: %d %s(direction %d)" % (square.entity.entid, extra, square.entity.direction)
                 print
 
     def on_released(self, widget=None, event=None):

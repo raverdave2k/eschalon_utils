@@ -203,7 +203,7 @@ class B2GfxEntCache(GfxCache):
             col = (frame % cols)
             row = int(frame / cols)
             newctx.set_operator(cairo.OPERATOR_SOURCE)
-            newctx.set_source_surface(self.surface, -row*self.width, -col*self.height + (i*self.height))
+            newctx.set_source_surface(self.surface, -col*self.width, -row*self.height + (i*self.height))
             newctx.rectangle(0, i*self.height, self.width, self.height)
             newctx.fill()
         newctx.restore()
