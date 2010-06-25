@@ -2193,7 +2193,15 @@ class MapGUI(BaseGUI):
                 print "   Wall Decal: %d" % (square.walldecalimg)
                 print "   Unknown: %d" % (square.unknown5)
                 print "   Script ID: %d" % (square.scriptid)
+                if len(square.scripts) > 0:
+                    for (i, script) in enumerate(square.scripts):
+                        print "   Script %d:" % (i+1)
+                        print script.display()
+                        print
+                elif square.scriptid != 0:
+                    print "   No script object!"
                 if square.entity:
+                    print
                     if square.entity.entid in c.entitytable:
                         extra = '- %s ' % (c.entitytable[square.entity.entid].name)
                     else:

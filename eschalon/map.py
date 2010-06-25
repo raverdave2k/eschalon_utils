@@ -171,7 +171,7 @@ class Map(object):
     def addscript(self):
         """ Add a mapscript. """
         try:
-            script = Mapscript(self.is_savegame())
+            script = Mapscript.new(c.book, self.is_savegame())
             script.read(self.df)
             # Note that once we start deleting scripts, you'll have to update both constructs here.
             # Something along the lines of this should do:
@@ -569,12 +569,11 @@ class B2Map(Map):
                 self.addsquare()
 
             # Scripts...  Just keep going until EOF
-            # (haven't figured this out yet for B2)
-            #try:
-            #    while (self.addscript()):
-            #        pass
-            #except FirstItemLoadException, e:
-            #    pass
+            try:
+                while (self.addscript()):
+                    pass
+            except FirstItemLoadException, e:
+                pass
 
             # Entities...  Just keep going until EOF (note that this is in a separate file)
             # Also note that we have to support situations where there is no entity file
@@ -589,10 +588,9 @@ class B2Map(Map):
 
             # If there's extra data at the end, we likely don't have
             # a valid char file
-            # (have to get b2 scripts figured out before this)
-            #self.extradata = self.df.read()
-            #if (len(self.extradata)>0):
-            #    raise LoadException('Extra data at end of file')
+            self.extradata = self.df.read()
+            if (len(self.extradata)>0):
+                raise LoadException('Extra data at end of file')
 
             # Close the file
             self.df.close()
