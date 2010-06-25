@@ -469,6 +469,7 @@ class MapGUI(BaseGUI):
 
         # Now add an idle_timeout to initialize the map - this is how our
         # initial load happens
+        #gobject.idle_add(self.export_map_pngs)
         gobject.idle_add(self.draw_map)
 
         # ... and get into the main gtk loop
@@ -2757,6 +2758,24 @@ class MapGUI(BaseGUI):
 
         # ... and update the main image
         self.get_widget('composite_area').set_from_pixbuf(comp_pixbuf)
+
+    def export_map_pngs(self):
+        """
+        A little sub to loop through and write out a PNG of each mapname
+        """
+        # TODO: keep?  throw away?
+        self.mapinit = True
+        self.set_zoom_vars(1)
+        print self.options
+        for file in self.options['filenames']:
+            self.load_from_file(file)
+            #self.draw_map()
+            (pngfile, junk) = file.split('.')
+            pngfile = '%s.png' % (pngfile)
+            self.guicache.write_to_png(pngfile)
+        import sys
+        sys.exit(0)
+        return False
 
     def draw_map(self):
         """

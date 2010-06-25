@@ -141,6 +141,9 @@ def main(argv=None):
     # Set our filename, if we have it
     if (len(args) > 0):
         options['filename'] = args[0]
+        # TODO: this was here to support me doing mass graphic exports.
+        # remove it?
+        options['filenames'] = args
 
     # Make sure we have a filename still
     if (not options['gui'] and options['filename'] == None):
