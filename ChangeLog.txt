@@ -1,5 +1,8 @@
 # ChangeLog for Eschalon Savefile Editor
 
+   24 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
+   Book 2 Entities get drawn in map GUI
+
    21 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
    Initial Book 2 Map GUI integration
 

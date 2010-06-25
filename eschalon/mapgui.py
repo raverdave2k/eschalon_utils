@@ -2623,9 +2623,11 @@ class MapGUI(BaseGUI):
             ent_img = self.gfx.get_entity(square.entity.entid, square.entity.direction, self.curzoom)
             if (ent_img is not None):
                 if (ent_img.get_width() > self.z_squarebuf_w):
+                    # This whole bit here will copy our squarebuf into a larger surface, centered
+                    # (so, transparent on the side)
                     self.ent_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, ent_img.get_width(), self.z_5xheight)
                     self.ent_ctx = cairo.Context(self.ent_surf)
-                    op_xoffset = int((ent_img.get_width()-self.curzoom)/2)
+                    op_xoffset = int((ent_img.get_width()-self.z_squarebuf_w)/2)
                     self.ent_ctx.set_source_surface(op_surf, op_xoffset, 0)
                     self.ent_ctx.paint()
                     op_surf = self.ent_surf
