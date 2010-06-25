@@ -165,6 +165,7 @@ class MapGUI(BaseGUI):
         self.tree_toggle = self.get_widget('tree_button')
         self.objectdecal_toggle = self.get_widget('objectdecal_button')
         self.entity_toggle = self.get_widget('entity_button')
+        self.huge_gfx_toggle = self.get_widget('huge_gfx_button')
         self.barrier_hi_toggle = self.get_widget('barrier_hi_button')
         self.script_hi_toggle = self.get_widget('script_hi_button')
         self.entity_hi_toggle = self.get_widget('entity_hi_button')
@@ -2419,7 +2420,7 @@ class MapGUI(BaseGUI):
 
     def draw_check_set_to(self, status):
         return self.mass_update_checkboxes(status, [self.floor_toggle, self.decal_toggle, self.object_toggle,
-            self.wall_toggle, self.tree_toggle, self.objectdecal_toggle, self.entity_toggle])
+            self.wall_toggle, self.tree_toggle, self.objectdecal_toggle, self.entity_toggle, self.huge_gfx_toggle])
 
     def draw_check_all(self, widget):
         self.draw_check_set_to(True)
@@ -2693,6 +2694,31 @@ class MapGUI(BaseGUI):
 
         return (op_surf, op_xoffset)
 
+    def draw_huge_gfx(self, square):
+        """
+        Draws a "huge" graphic image on our map (like Hammerlorne, etc).
+        Only used in Book 2.
+        """
+        if square.scriptid == 21 and len(square.scripts) > 0:
+            img = self.gfx.get_huge_gfx(square.scripts[0].extratext, self.curzoom)
+            if img:
+                #img.write_to_png('test_%s' % (square.scripts[0].extratext))
+
+                x = square.x
+                y = square.y
+                # TODO: xpad processing should be abstracted somehow when we're drawing whole rows
+                # (for instance, when initially loading the map)
+                if (y % 2 == 1):
+                    xpad = self.z_halfwidth
+                else:
+                    xpad = 0
+
+                xstart = (x*self.z_width)+xpad - int(img.get_width()/2) + self.z_height
+                ystart = y*self.z_halfheight + self.z_height
+
+                self.guicache_ctx.set_source_surface(img, xstart, ystart-img.get_height())
+                self.guicache_ctx.paint()
+
     def update_composite(self):
 
         # Grab our variables and clear out the pixbuf
@@ -2799,8 +2825,14 @@ class MapGUI(BaseGUI):
 
         # Draw the squares
         for y in range(len(self.map.squares)):
+            huge_gfxes = []
             for x in range(len(self.map.squares[y])):
                 self.draw_square(x, y)
+                if self.map.squares[y][x].scriptid == 21:
+                    huge_gfxes.append(self.map.squares[y][x])
+            if self.req_book == 2 and self.huge_gfx_toggle.get_active():
+                for square in huge_gfxes:
+                    self.draw_huge_gfx(square)
             self.drawstatusbar.set_fraction(y/float(len(self.map.squares)))
             while gtk.events_pending():
                 gtk.main_iteration()

@@ -312,10 +312,10 @@ class Map(object):
             except (IOError, struct.error), e:
                 raise LoadException(str(e))
 
-        if c1 == 1 or c2 == 1:
-            book = 2
-        else:
-            book = 1
+            if c1 == 1 or c2 == 1:
+                book = 2
+            else:
+                book = 1
 
         # See if we're required to conform to a specific book
         if (req_book is not None and book != req_book):

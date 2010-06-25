@@ -216,6 +216,21 @@ class B2GfxEntCache(GfxCache):
             self.pixbuf.copy_area(0, 0, self.width, imgheight, newbuf, 0, 0)
             self.pixbuf = newbuf
 
+class SingleImageGfxCache(GfxCache):
+    """
+    Class to take care of "huge" images, mostly, in which we just want to cache resized graphics.
+    Only used for Book 2 at the moment, hence our "64" hardcode down below.
+    """
+    def __init__(self, pngdata):
+
+        # Read the data as usual, with junk for width and height
+        super(SingleImageGfxCache, self).__init__(pngdata, -1, -1, 1)
+
+        # And now set the image dimensions appropriately
+        self.width = self.surface.get_width()
+        self.height = self.surface.get_height()
+        self.size_scale = self.width/64.0
+
 class PakIndex(object):
     """ A class to hold information on an individual file in the pak. """
 
@@ -507,6 +522,7 @@ class B2Gfx(Gfx):
 
         # Other stuff
         self.treecache = [ None, None, None ]
+        self.hugegfxcache = {}
 
     def readfile(self, filename):
         """
@@ -587,6 +603,21 @@ class B2Gfx(Gfx):
         if (size is None):
             size = 64
         return self.flamecache.getimg(1, int(size*self.flamecache.size_scale), gdk)
+
+    def get_huge_gfx(self, file, size=None, gdk=False):
+        """
+        Grabs an arbitrary graphic file from our pool (used for the "huge" graphics like Hammerlorne,
+        Corsair ships, etc, in Book 2)
+        """
+        # TODO: get_flame should probably just call this
+        if file not in self.hugegfxcache:
+            if (file.find('/') != -1 or file.find('..') != -1 or file.find('\\') != -1):
+                return None
+            self.hugegfxcache[file] = SingleImageGfxCache(self.readfile(file))
+        # Not fond of hardcoding "64" here
+        if (size is None):
+            size = 64
+        return self.hugegfxcache[file].getimg(1, int(size*self.hugegfxcache[file].size_scale), gdk)
 
     def get_entity(self, entnum, direction, size=None, gdk=False):
         ent = c.entitytable[entnum]
