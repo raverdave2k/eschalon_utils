@@ -256,8 +256,6 @@ class Gfx(object):
 
         self.prefs = prefs
         self.datadir = datadir
-        self.pakloc = os.path.join(self.prefs.get_str('paths', 'gamedir'), 'gfx.pak')
-        self.df = Savefile(self.pakloc)
 
         # wtf @ needing this (is the same for B1 and B2)
         self.treemap = {
@@ -329,7 +327,6 @@ class B1Gfx(Gfx):
     squarebuf_mult = 1
 
     def __init__(self, prefs, datadir):
-        super(B1Gfx, self).__init__(prefs, datadir)
 
         # Wall object types
         for i in range(161):
@@ -350,6 +347,13 @@ class B1Gfx(Gfx):
         self.unknowni1 = -1
         self.fileindex = {}
         self.zeroindex = -1
+
+        # Graphics PAK file
+        self.pakloc = os.path.join(prefs.get_str('paths', 'gamedir'), 'gfx.pak')
+        self.df = Savefile(self.pakloc)
+
+        # Finally call the parent constructor
+        super(B1Gfx, self).__init__(prefs, datadir)
 
     def readfile(self, filename):
         """ Reads a given filename out of the PAK. """
@@ -507,7 +511,6 @@ class B2Gfx(Gfx):
     squarebuf_mult = 1.5
 
     def __init__(self, prefs, datadir):
-        super(B2Gfx, self).__init__(prefs, datadir)
 
         # Wall object types
         for i in range(251):
@@ -518,11 +521,14 @@ class B2Gfx(Gfx):
             self.wall_types[i] = self.TYPE_WALL
         
         # Store our gamedir
-        self.gamedir = self.prefs.get_str('paths', 'gamedir_b2')
+        self.gamedir = prefs.get_str('paths', 'gamedir_b2')
 
         # Other stuff
         self.treecache = [ None, None, None ]
         self.hugegfxcache = {}
+
+        # Finally call the parent constructor
+        super(B2Gfx, self).__init__(prefs, datadir)
 
     def readfile(self, filename):
         """

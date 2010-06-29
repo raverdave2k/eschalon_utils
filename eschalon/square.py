@@ -40,6 +40,7 @@ class Square(object):
 
         self.scripts = []
         self.entity = None
+        self.savegame = False
 
     def replicate(self):
         newsquare = Square(self.x, self.y)
@@ -191,8 +192,7 @@ class B1Square(Square):
 
     book = 1
 
-    def __init__(self, x, y, savegame):
-        # Note that we can ignore the savegame flag in book 1
+    def __init__(self, x, y):
         super(B1Square, self).__init__(x, y)
 
         # Book 1 specific vars
@@ -232,7 +232,6 @@ class B2Square(Square):
         super(B2Square, self).__init__(x, y)
 
         # Book 2 specific vars
-        self.savegame = False
         self.unknowni1 = -1
 
     def read(self, df):

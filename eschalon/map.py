@@ -76,6 +76,10 @@ class Map(object):
 
         self.extradata = ''
 
+        # Note that book 1 doesn't actually have this, but for sanity's
+        # sake we're putting it in the base class
+        self.tree_set = -1
+
         self.cursqcol = 0
         self.cursqrow = 0
 
@@ -124,6 +128,7 @@ class Map(object):
         newmap.savegame_2 = self.savegame_2
         newmap.savegame_3 = self.savegame_3
         newmap.extradata = self.extradata
+        newmap.tree_set = self.tree_set
 
         # Copy squares
         for i in range(200):
@@ -158,6 +163,13 @@ class Map(object):
 
         # Now return our duplicated object
         return newmap
+
+    def set_square_savegame(self):
+        """ Sets the savegame flag appropriately for all squares """
+        savegame = self.is_savegame()
+        for row in self.squares:
+            for square in row:
+                square.savegame = savegame
 
     def addsquare(self):
         """ Add a new square, assuming that the squares are stored in a
@@ -388,6 +400,7 @@ class B1Map(Map):
             self.savegame_3 = self.df.readint()
 
             # Squares
+            self.set_square_savegame()
             for i in range(200*100):
                 self.addsquare()
 
@@ -502,7 +515,6 @@ class B2Map(Map):
         self.unknowni2 = -1
         self.unknowni3 = -1
         self.unknowni4 = -1
-        self.tree_set = -1
         self.unknownc5 = -1
         self.unknownc6 = -1
         self.unknownc7 = -1
@@ -557,14 +569,8 @@ class B2Map(Map):
             self.unknownstr5 = self.df.readstr()
             self.unknownstr6 = self.df.readstr()
 
-            # Set the savegame flag on our squares, now that we
-            # have enough information to do so
-            is_savegame = self.is_savegame()
-            for row in self.squares:
-                for square in row:
-                    square.savegame = is_savegame
-
             # Squares
+            self.set_square_savegame()
             for i in range(200*100):
                 self.addsquare()
 

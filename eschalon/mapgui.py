@@ -1015,7 +1015,7 @@ class MapGUI(BaseGUI):
     def on_wall_changed(self, widget):
         """ Update the appropriate image when necessary. """
         self.on_singleval_square_changed_int(widget)
-        (pixbuf, height) = self.gfx.get_object(widget.get_value_as_int(), None, True)
+        (pixbuf, height, offset) = self.gfx.get_object(widget.get_value_as_int(), None, True)
         if (pixbuf is None):
             self.get_widget('wallimg_image').set_from_stock(gtk.STOCK_EDIT, 2)
         else:
@@ -2169,44 +2169,43 @@ class MapGUI(BaseGUI):
             self.diff_x = 0
             self.diff_y = 0
             self.maparea.window.set_cursor(self.cursor_move_drag)
-        elif self.req_book == 1:
-            if (action == self.ACTION_EDIT):
-                if (self.sq_y < len(self.map.squares)):
-                    if (self.sq_x < len(self.map.squares[self.sq_y])):
-                        self.undo.store(self.sq_x, self.sq_y)
-                        self.populate_squarewindow_from_square(self.map.squares[self.sq_y][self.sq_x])
-                        self.get_widget('squarelabel').set_markup('<b>Map Tile (%d, %d)</b>' % (self.sq_x, self.sq_y))
-                        self.squarewindow.show()
-            elif (action == self.ACTION_DRAW):
-                self.drawing = True
-                self.action_draw_square(self.sq_x, self.sq_y)
-            elif (action == self.ACTION_ERASE):
-                self.erasing = True
-                self.action_erase_square(self.sq_x, self.sq_y)
-        else:
-            # Book 2 stupid reporting (for now)
-            square = self.map.squares[self.sq_y][self.sq_x]
-            if square:
-                print "Square at (%d, %d)" % (self.sq_x, self.sq_y)
-                print "   Barrier Flag: %d" % (square.wall)
-                print "   Floor: %d" % (square.floorimg)
-                print "   Decal: %d" % (square.decalimg)
-                print "   Wall: %d" % (square.wallimg)
-                print "   Wall Decal: %d" % (square.walldecalimg)
-                print "   Unknown: %d" % (square.unknown5)
-                print "   Script ID: %d" % (square.scriptid)
-                if len(square.scripts) > 0:
-                    for (i, script) in enumerate(square.scripts):
-                        print "   Script %d:" % (i+1)
-                        print script.display()
-                        print
-                elif square.scriptid != 0:
-                    print "   No script object!"
-                if square.entity:
-                    print
-                    print "   Entity:"
-                    print square.entity.display()
-                print
+        if (action == self.ACTION_EDIT):
+            if (self.sq_y < len(self.map.squares)):
+                if (self.sq_x < len(self.map.squares[self.sq_y])):
+                    self.undo.store(self.sq_x, self.sq_y)
+                    self.populate_squarewindow_from_square(self.map.squares[self.sq_y][self.sq_x])
+                    self.get_widget('squarelabel').set_markup('<b>Map Tile (%d, %d)</b>' % (self.sq_x, self.sq_y))
+                    self.squarewindow.show()
+        elif (action == self.ACTION_DRAW):
+            self.drawing = True
+            self.action_draw_square(self.sq_x, self.sq_y)
+        elif (action == self.ACTION_ERASE):
+            self.erasing = True
+            self.action_erase_square(self.sq_x, self.sq_y)
+        #else:
+        #    # Book 2 stupid reporting (for now)
+        #    square = self.map.squares[self.sq_y][self.sq_x]
+        #    if square:
+        #        print "Square at (%d, %d)" % (self.sq_x, self.sq_y)
+        #        print "   Barrier Flag: %d" % (square.wall)
+        #        print "   Floor: %d" % (square.floorimg)
+        #        print "   Decal: %d" % (square.decalimg)
+        #        print "   Wall: %d" % (square.wallimg)
+        #        print "   Wall Decal: %d" % (square.walldecalimg)
+        #        print "   Unknown: %d" % (square.unknown5)
+        #        print "   Script ID: %d" % (square.scriptid)
+        #        if len(square.scripts) > 0:
+        #            for (i, script) in enumerate(square.scripts):
+        #                print "   Script %d:" % (i+1)
+        #                print script.display()
+        #                print
+        #        elif square.scriptid != 0:
+        #            print "   No script object!"
+        #        if square.entity:
+        #            print
+        #            print "   Entity:"
+        #            print square.entity.display()
+        #        print
 
     def on_released(self, widget=None, event=None):
         if (self.dragging or self.drawing or self.erasing):
@@ -2690,7 +2689,7 @@ class MapGUI(BaseGUI):
                 self.guicache_ctx.set_source_surface(op_surf, x1-op_xoffset-self.z_squarebuf_offset, top-buftop)
                 self.guicache_ctx.paint()
 
-        return (op_surf, op_xoffset)
+        return (op_surf, op_xoffset+self.z_squarebuf_offset)
 
     def draw_huge_gfx(self, square):
         """
@@ -2738,7 +2737,7 @@ class MapGUI(BaseGUI):
                 if (pixbuf is not None):
                     pixbuf.composite(comp_pixbuf, 17, 88, 18, 30, 17, 88, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
         if (square.wallimg > 0):
-            (pixbuf, pixheight) = self.gfx.get_object(square.wallimg, 52, True)
+            (pixbuf, pixheight, offset) = self.gfx.get_object(square.wallimg, 52, True)
             if (pixbuf is not None):
                 pixbuf.composite(comp_pixbuf, 0, 26*(4-pixheight), 52, 26*(pixheight+1), 0, 26*(4-pixheight), 1, 1, gtk.gdk.INTERP_NEAREST, 255)
         if (square.walldecalimg > 0):
