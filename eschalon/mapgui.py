@@ -2204,11 +2204,8 @@ class MapGUI(BaseGUI):
                     print "   No script object!"
                 if square.entity:
                     print
-                    if square.entity.entid in c.entitytable:
-                        extra = '- %s ' % (c.entitytable[square.entity.entid].name)
-                    else:
-                        extra = ''
-                    print "   Entity ID: %d %s(direction %d)" % (square.entity.entid, extra, square.entity.direction)
+                    print "   Entity:"
+                    print square.entity.display()
                 print
 
     def on_released(self, widget=None, event=None):
