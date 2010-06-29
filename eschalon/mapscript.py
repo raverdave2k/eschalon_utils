@@ -36,22 +36,15 @@ class Mapscript(object):
     def __init__(self, savegame=True):
         """ A fresh object with no data. """
 
+        # Common attributes
         self.savegame = savegame
         self.x = -1
         self.y = -1
         self.description = ''
         self.extratext = ''
-        self.zeroi1 = -1
-        self.zeroh1 = -1
-        self.sturdiness = -1
-        self.flags = -1
-        self.zeroi2 = -1
-        self.zeroi3 = -1
         self.lock = -1
         self.trap = -1
         self.state = -1
-        self.other = -1
-        self.unknownh3 = -1
         self.script = ''
 
         self.items = []
@@ -62,23 +55,24 @@ class Mapscript(object):
         self.y = y
         self.description = ''
         self.extratext = ''
-        self.zeroi1 = 0
-        self.zeroh1 = 0
-        self.sturdiness = 0
-        self.flags = 0
-        self.zeroi2 = 0
-        self.zeroi3 = 0
         self.lock = 0
         self.trap = 0
         self.state = 0
-        self.other = 0
-        self.unknownh3 = 0
         self.script = ''
 
         # Populate Items as well
         for num in range(8):
             self.items.append(Item.new(c.book))
             self.items[num].tozero()
+
+        # Call out to superclass zeroing
+        self._sub_tozero()
+
+    def _sub_tozero(self):
+        """
+        Function for superclasses to override with zeroing functions.
+        """
+        pass
 
     def replicate(self):
         newmapscript = Mapscript()
@@ -89,25 +83,26 @@ class Mapscript(object):
         newmapscript.y = self.y
         newmapscript.description = self.description
         newmapscript.extratext = self.extratext
-        newmapscript.zeroi1 = self.zeroi1
-        newmapscript.zeroh1 = self.zeroh1
-        newmapscript.sturdiness = self.sturdiness
-        newmapscript.flags = self.flags
-        newmapscript.zeroi2 = self.zeroi2
-        newmapscript.zeroi3 = self.zeroi3
         newmapscript.lock = self.lock
         newmapscript.trap = self.trap
         newmapscript.state = self.state
-        newmapscript.other = self.other
-        newmapscript.unknownh3 = self.unknownh3
         newmapscript.script = self.script
 
         # Items
         for item in self.items:
             newmapscript.items.append(item.replicate())
 
+        # Call out to superclass replication
+        self._sub_replicate(newmapscript)
+
         # ... aaand return our new object
         return newmapscript
+
+    def _sub_replicate(self, newmapscript):
+        """
+        Stub for superclasses to override, to replicate specific vars
+        """
+        pass
 
     def read(self, df):
         """ Given a file descriptor, read in the mapscript. """
@@ -178,24 +173,23 @@ class Mapscript(object):
         checking if our values are the same, NOT if we're *actually*
         the same object.  Returns true for equality, false for inequality.
         """
-        return (self.x == script.x and
+        return (self._sub_equal(script) and
+                self.x == script.x and
                 self.y == script.y and
                 self.description == script.description and
                 self.extratext == script.extratext and
-                self.zeroi1 == script.zeroi1 and
-                self.zeroh1 == script.zeroh1 and
-                self.sturdiness == script.sturdiness and
-                self.flags == script.flags and
-                self.zeroi2 == script.zeroi2 and
-                self.zeroi3 == script.zeroi3 and
                 self.lock == script.lock and
                 self.trap == script.trap and
                 self.state == script.state and
-                self.other == script.other and
-                self.unknownh3 == script.unknownh3 and
                 self.script == script.script and
                 self.savegame == script.savegame and
                 self.items_equal(script.items))
+
+    def _sub_equal(self, script):
+        """
+        Stub for superclasses to implement
+        """
+        return True
 
     def items_equal(self, items):
         """
@@ -228,6 +222,55 @@ class B1Mapscript(Mapscript):
 
     def __init__(self, savegame):
         super(B1Mapscript, self).__init__(savegame)
+
+        # B1-specific vars
+        self.zeroi1 = -1
+        self.zeroh1 = -1
+        self.sturdiness = -1
+        self.flags = -1
+        self.zeroi2 = -1
+        self.zeroi3 = -1
+        self.other = -1
+        self.unknownh3 = -1
+
+    def _sub_tozero(self):
+        """
+        Zero out our vars
+        """
+        self.zeroi1 = 0
+        self.zeroh1 = 0
+        self.sturdiness = 0
+        self.flags = 0
+        self.zeroi2 = 0
+        self.zeroi3 = 0
+        self.other = 0
+        self.unknownh3 = 0
+
+    def _sub_replicate(self, newmapscript):
+        """
+        Replication!
+        """
+        newmapscript.zeroi1 = self.zeroi1
+        newmapscript.zeroh1 = self.zeroh1
+        newmapscript.sturdiness = self.sturdiness
+        newmapscript.flags = self.flags
+        newmapscript.zeroi2 = self.zeroi2
+        newmapscript.zeroi3 = self.zeroi3
+        newmapscript.other = self.other
+        newmapscript.unknownh3 = self.unknownh3
+
+    def _sub_equal(self, script):
+        """
+        Whether our B1-specific vars are equal
+        """
+        return (self.zeroi1 == script.zeroi1 and
+                self.zeroh1 == script.zeroh1 and
+                self.sturdiness == script.sturdiness and
+                self.flags == script.flags and
+                self.zeroi2 == script.zeroi2 and
+                self.zeroi3 == script.zeroi3 and
+                self.other == script.other and
+                self.unknownh3 == script.unknownh3)
 
     def read(self, df):
         """ Given a file descriptor, read in the mapscript. """
@@ -346,12 +389,35 @@ class B2Mapscript(Mapscript):
 
         self.cur_condition = -1
         self.max_condition = -1
-        self.unknownc1 = -1
-        self.unknownc2 = -1
-        self.unknownc3 = -1
-        self.unknownc4 = -1
-        self.unknownc5 = -1
-        self.unknownc6 = -1
+        self.on_empty = -1
+        self.slider_loot = -1
+
+    def _sub_tozero(self):
+        """
+        Zero out our vars
+        """
+        self.cur_condition = 0
+        self.max_condition = 0
+        self.on_empty = 0
+        self.slider_loot = 0
+
+    def _sub_replicate(self, newmapscript):
+        """
+        Replication!
+        """
+        newmapscript.cur_condition = self.cur_condition
+        newmapscript.max_condition = self.max_condition
+        newmapscript.on_empty = self.on_empty
+        newmapscript.slider_loot = self.slider_loot
+
+    def _sub_equal(self, script):
+        """
+        Whether our B2-specific vars are equal
+        """
+        return (self.cur_condition == script.cur_condition and
+                self.max_condition == script.max_condition and
+                self.on_empty == script.on_empty and
+                self.slider_loot == script.slider_loot)
 
     def read(self, df):
         """ Given a file descriptor, read in the mapscript. """
@@ -370,17 +436,13 @@ class B2Mapscript(Mapscript):
         # ... everything else
         self.description = df.readstr()
         self.extratext = df.readstr()
-
         self.cur_condition = df.readint()
         self.max_condition = df.readint()
-
-        self.unknownc1 = df.readuchar()
-        self.unknownc2 = df.readuchar()
-        self.unknownc3 = df.readuchar()
-        self.unknownc4 = df.readuchar()
-        self.unknownc5 = df.readuchar()
-        self.unknownc6 = df.readuchar()
-
+        self.on_empty = df.readuchar()
+        self.lock = df.readuchar()
+        self.trap = df.readuchar()
+        self.slider_loot = df.readshort()
+        self.state = df.readuchar()
         self.script = df.readstr()
 
         # Items
@@ -390,6 +452,27 @@ class B2Mapscript(Mapscript):
                 self.items[num].read(df)
             else:
                 self.items[num].item_name = df.readstr()
+
+    def write(self, df):
+        """ Write the mapscript to the file. """
+
+        df.writeint((self.y*100)+self.x)
+        df.writestr(self.description)
+        df.writestr(self.extratext)
+        df.writeint(self.cur_condition)
+        df.writeint(self.max_condition)
+        df.writeuchar(self.on_empty)
+        df.writeuchar(self.lock)
+        df.writeuchar(self.trap)
+        df.writeshort(self.slider_loot)
+        df.writeuchar(self.state)
+        df.writestr(self.script)
+
+        for num in range(8):
+            if (self.savegame):
+                self.items[num].write(df)
+            else:
+                df.writestr(self.items[num].item_name)
 
     def display(self, unknowns=False):
         """ Show a textual description of all fields. """
@@ -402,41 +485,24 @@ class B2Mapscript(Mapscript):
         ret.append("\tScript: %s" % self.script)
 
         ret.append("\tCondition: %d / %d" % (self.cur_condition, self.max_condition))
-        ret.append("\tUnknown 1: %d" % (self.unknownc1))
-        ret.append("\tUnknown 2: %d" % (self.unknownc2))
-        ret.append("\tUnknown 3: %d" % (self.unknownc3))
-        ret.append("\tUnknown 4: %d" % (self.unknownc4))
-        ret.append("\tUnknown 5: %d" % (self.unknownc5))
-        ret.append("\tUnknown 6: %d" % (self.unknownc6))
-        #ret.append("\tLock Level: %d" % self.lock)
-        #if (self.lock == 99):
-        #    ret.append("\tSlider Lock Code: %d" % self.other)
-        #else:
-        #    ret.append("\tOther (typically 0-3): %d" % self.other)
-        #if (self.trap in c.traptable):
-        #    ret.append("\tTrapped: %s" % c.traptable[self.trap])
-        #else:
-        #    ret.append("\tTrapped: %d (unknown)" % self.trap)
-        #if (self.state in c.containertable):
-        #    ret.append("\tState: %s" % c.containertable[self.state])
-        #else:
-        #    ret.append("\tState: %d (unknown)" % self.state)
-        #ret.append("\tSturdiness: %d" % self.sturdiness)
-        #if (self.flags != 0):
-        #    ret.append("\tFlags:")
-        #    for (flag, flagtext) in c.scriptflags.items():
-        #        if (self.flags & flag == flag):
-        #            ret.append("\t\t* %s" % flagtext)
+        ret.append("\tOn-Empty flag: %d" % (self.on_empty))
+        ret.append("\tLock Level: %d" % self.lock)
+        if (self.lock == 12):
+            ret.append("\tSlider Lock Code: %d" % self.slider_loot)
+        else:
+            ret.append("\tLoot Level: %d" % self.slider_loot)
+        if (self.trap in c.traptable):
+            ret.append("\tTrapped: %s" % c.traptable[self.trap])
+        else:
+            ret.append("\tTrapped: %d (unknown)" % self.trap)
+        if (self.state in c.containertable):
+            ret.append("\tState: %s" % c.containertable[self.state])
+        else:
+            ret.append("\tState: %d (unknown)" % self.state)
 
         ret.append("\tContents:")
         for item in self.items:
             if (item.item_name != ''):
                 ret.append("\t\t* %s" % item.item_name)
-        #if (unknowns):
-        #    ret.append("\tUnknown Short 3: %d 0x%04X" % (self.unknownh3, self.unknownh3))
-        #    ret.append("\tUsually Zero 1: %d" % (self.zeroh1))
-        #    ret.append("\tUsually Zero 2: %d" % (self.zeroi1))
-        #    ret.append("\tUsually Zero 3: %d" % (self.zeroi2))
-        #    ret.append("\tUsually Zero 4: %d" % (self.zeroi3))
 
         return "\n".join(ret)
