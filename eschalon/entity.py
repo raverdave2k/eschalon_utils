@@ -317,3 +317,21 @@ class B2Entity(Entity):
             self.statuses = []
             for i in range(26):
                 self.statuses.append(df.readint())
+
+    def write(self, df):
+        """ Write the entity to the file. """
+
+        df.writeuchar(self.entid)
+        df.writeuchar(self.x)
+        df.writeuchar(self.y)
+        df.writeuchar(self.direction)
+        df.writestr(self.script)
+        if (self.savegame):
+            df.writeuchar(self.friendly)
+            df.writeuchar(self.movement)
+            df.writeint(self.health)
+            df.writeuchar(self.unknownc1)
+            df.writeshort(self.initial_loc)
+            df.writeshort(self.ent_zero1)
+            for status in self.statuses:
+                df.writeint(status)
