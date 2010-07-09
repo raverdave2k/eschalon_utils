@@ -181,6 +181,9 @@ class B1Entity(Entity):
     """
 
     book = 1
+    form_elements = [ 'unknownc1_label', 'unknownc1',
+            'ent_zero2_label', 'ent_zero2'
+            ]
 
     def __init__(self, savegame):
         super(B1Entity, self).__init__(savegame)
@@ -257,6 +260,7 @@ class B2Entity(Entity):
     """
 
     book = 2
+    form_elements = [ 'movement_label', 'movement' ]
 
     def __init__(self, savegame):
         super(B2Entity, self).__init__(savegame)

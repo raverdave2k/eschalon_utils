@@ -28,6 +28,7 @@ from eschalon import constants as c
 from eschalon.gfx import Gfx
 from eschalon.undo import Undo
 from eschalon.item import B1Item, B2Item
+from eschalon.entity import B1Entity, B2Entity
 
 # Load our GTK modules
 try:
@@ -267,7 +268,7 @@ class MapGUI(BaseGUI):
         self.item_gui_finish(c.book)
 
         # Now show or hide form elements depending on the book version
-        for item_class in (B1Item, B2Item):
+        for item_class in (B1Item, B2Item, B1Entity, B2Entity):
             self.set_book_elem_visibility(item_class, item_class.book == c.book)
 
         # Dictionary of signals.
@@ -1937,10 +1938,13 @@ class MapGUI(BaseGUI):
             self.get_widget('friendly').set_value(square.entity.friendly)
             self.get_widget('health').set_value(square.entity.health)
             self.get_widget('unknownc1').set_value(square.entity.unknownc1)
-            self.get_widget('unknownc2').set_value(square.entity.unknownc2)
             self.get_widget('ent_zero1').set_value(square.entity.ent_zero1)
-            self.get_widget('ent_zero2').set_value(square.entity.ent_zero2)
             self.get_widget('initial_loc').set_value(square.entity.initial_loc)
+            if c.book == 1:
+                self.get_widget('unknownc2').set_value(square.entity.unknownc2)
+                self.get_widget('ent_zero2').set_value(square.entity.ent_zero2)
+            else:
+                self.get_widget('movement').set_value(square.entity.movement)
 
     def update_object_note(self):
         """
