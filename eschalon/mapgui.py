@@ -913,11 +913,18 @@ class MapGUI(BaseGUI):
         self.on_script_int_changed(widget)
         wname = widget.get_name()
         (labelname, page) = wname.rsplit('_', 1)
-        otherlabel = self.get_widget('other_%d_label' % (int(page)))
-        if (widget.get_value_as_int() == 99):
-            otherlabel.set_text('Slider Combination:')
+        if c.book == 1:
+            otherlabel = self.get_widget('other_%d_label' % (int(page)))
+            if (widget.get_value_as_int() == 99):
+                otherlabel.set_text('Slider Combination:')
+            else:
+                otherlabel.set_markup('<i>Other Value (0-3):</i>')
         else:
-            otherlabel.set_markup('<i>Other Value (0-3):</i>')
+            sliderloot = self.get_widget('slider_loot_%d_label' % (int(page)))
+            if (widget.get_value_as_int() == 12):
+                sliderloot.set_text('Slider Combination:')
+            else:
+                sliderloot.set_markup('Loot Level (0-10):')
 
     def update_ent_square_img(self):
         entity = self.map.squares[self.sq_y][self.sq_x].entity
@@ -1492,7 +1499,11 @@ class MapGUI(BaseGUI):
         widget = self.get_widget('item_%d_%d_text' % (num, page))
         imgwidget = self.get_widget('item_%d_%d_image' % (num, page))
         item = self.map.squares[self.sq_y][self.sq_x].scripts[page].items[num]
+        # TODO: temporary hack because we're not loading our image sheets
+        gfx = self.gfx
+        self.gfx = None
         self.populate_item_button(item, widget, imgwidget, self.get_widget('itemtable_%d' % (page)))
+        self.gfx = gfx
 
     def on_script_dropdown_changed(self, widget):
         """ Handle the trap dropdown change. """
@@ -1617,16 +1628,54 @@ class MapGUI(BaseGUI):
         else:
             self.input_uchar(curpages, binput, 5, 'state', 'State', 'The state value should be between 0 and 5 ordinarily.  The current container state is undefined.')
 
-        self.input_uchar(curpages, binput, 6, 'lock', 'Lock Level', 'Zero is unlocked, 1 is the easiest lock, 60 is the highest in the game, and 99 denotes a slider lock', self.on_locklevel_changed)
-        self.input_uchar(curpages, binput, 7, 'other', 'Other', 'When the Lock Level is set to 99, this is the combination of the safe.  Otherwise, it appears to be a value from 0 to 3.')
-
-        # If we ever get more flags, this'll have to change
-        if (square.scripts[curpages].flags & ~0x40 == 0):
-            self.input_flag(curpages, binput, 8, 'flags', 0x40, 'Destructible')
+        if c.book == 1:
+            locktip = 'Zero is unlocked, 1 is the easiest lock, 60 is the highest in the game, and 99 denotes a slider lock'
         else:
-            self.input_short(curpages, binput, 8, 'flags', 'Flags', 'Ordinarily this is a bit field, but the only value that I\'ve ever seen is "64" which denotes destructible.  Since this value is different, it\'s being shown here as an integer.')
+            locktip = 'Zero is unlocked, 1 is the easiest lock, 10 is the highest in the game, and 12 denotes a slider lock'
+        self.input_uchar(curpages, binput, 6, 'lock', 'Lock Level', locktip, self.on_locklevel_changed)
 
-        self.input_uchar(curpages, binput, 9, 'sturdiness', 'Sturdiness', '89 is the typical value for most objects.  Lower numbers are more flimsy.')
+        if c.book == 1:
+            # Book 1-specific values
+            self.input_uchar(curpages, binput, 7, 'other', 'Other', 'When the Lock Level is set to 99, this is the combination of the safe.  Otherwise, it appears to be a value from 0 to 3.')
+
+            # If we ever get more flags, this'll have to change
+            if (square.scripts[curpages].flags & ~0x40 == 0):
+                self.input_flag(curpages, binput, 8, 'flags', 0x40, 'Destructible')
+            else:
+                self.input_short(curpages, binput, 8, 'flags', 'Flags', 'Ordinarily this is a bit field, but the only value that I\'ve ever seen is "64" which denotes destructible.  Since this value is different, it\'s being shown here as an integer.')
+
+            self.input_uchar(curpages, binput, 9, 'sturdiness', 'Sturdiness', '89 is the typical value for most objects.  Lower numbers are more flimsy.')
+        else:
+            # Book 2-specific values
+            self.input_short(curpages, binput, 7, 'slider_loot', 'Slider/Lootlevel', 'If the container has a slider lock, this is the combination.  If not, it\'s the relative loot level (0 being appropriate to your class, 10 being the highest in-game)')
+            self.input_uchar(curpages, binput, 8, 'on_empty', 'On-Empty', 'Typically 0 for permanent containers, 1 for bags.  There are a couple of exceptions')
+
+            # Condition is special, we're using an hbox here
+            scr = self.map.squares[self.sq_y][self.sq_x].scripts[curpages]
+            self.input_label(curpages, binput, 9, 'cur_condition', 'Condition')
+            hbox = gtk.HBox()
+            curentry = gtk.SpinButton()
+            self.register_widget('cur_condition_%d' % (curpages), curentry)
+            curentry.set_range(0, 0xFFFFFFFF)
+            curentry.set_adjustment(gtk.Adjustment(0, 0, 0xFFFFFFFF, 1, 10, 0))
+            maxlabel = gtk.Label('out of:')
+            self.register_widget('max_condition_%d_label' % (curpages), maxlabel)
+            maxentry = gtk.SpinButton()
+            self.register_widget('max_condition_%d' % (curpages), maxentry)
+            maxentry.set_range(0, 0xFFFFFFFF)
+            maxentry.set_adjustment(gtk.Adjustment(0, 0, 0xFFFFFFFF, 1, 10, 0))
+            hbox.add(curentry)
+            hbox.add(maxlabel)
+            hbox.add(maxentry)
+            if (script is not None):
+                curentry.set_value(scr.cur_condition)
+                maxentry.set_value(scr.max_condition)
+            curentry.connect('value-changed', self.on_script_int_changed)
+            maxentry.connect('value-changed', self.on_script_int_changed)
+            align = gtk.Alignment(0, 0.5, 0, 1)
+            align.add(hbox)
+            align.show_all()
+            binput.attach(align, 2, 3, 9, 10)
 
         # Contents
         contents_box = self.script_group_box('<b>Contents</b> <i>(If Container)</i>')
@@ -1661,11 +1710,12 @@ class MapGUI(BaseGUI):
         unknown_box.pack_start(uinput, False, False)
 
         # Data in Unknowns block
-        self.input_short(curpages, uinput, 0, 'unknownh3', '<i>Unknown</i>')
-        self.input_short(curpages, uinput, 1, 'zeroh1', '<i>Usually Zero 1</i>')
-        self.input_int(curpages, uinput, 2, 'zeroi1', '<i>Usually Zero 2</i>')
-        self.input_int(curpages, uinput, 3, 'zeroi2', '<i>Usually Zero 3</i>')
-        self.input_int(curpages, uinput, 4, 'zeroi3', '<i>Usually Zero 4</i>')
+        if c.book == 1:
+            self.input_short(curpages, uinput, 0, 'unknownh3', '<i>Unknown</i>')
+            self.input_short(curpages, uinput, 1, 'zeroh1', '<i>Usually Zero 1</i>')
+            self.input_int(curpages, uinput, 2, 'zeroi1', '<i>Usually Zero 2</i>')
+            self.input_int(curpages, uinput, 3, 'zeroi2', '<i>Usually Zero 3</i>')
+            self.input_int(curpages, uinput, 4, 'zeroi3', '<i>Usually Zero 4</i>')
 
         # Tab Content
         content = gtk.VBox()

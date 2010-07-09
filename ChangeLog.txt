@@ -1,5 +1,8 @@
 # ChangeLog for Eschalon Savefile Editor
 
+   09 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
+   Book 2 mapscripts now populate in the GUI
+
    29 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
    Cleaned up Item equality testing
 

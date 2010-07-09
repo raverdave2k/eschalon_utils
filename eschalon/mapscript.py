@@ -104,69 +104,6 @@ class Mapscript(object):
         """
         pass
 
-    def read(self, df):
-        """ Given a file descriptor, read in the mapscript. """
-
-        # We throw an exception because there seems to be an arbitrary
-        # number of scripts at the end of the map file, and no 'script count' anywhere.
-        # So we have to just keep loading scripts until EOF,
-        if (df.eof()):
-            raise FirstItemLoadException('Reached EOF')
-
-        # I'd just like to say "wtf" at this coordinate-storing system
-        intcoords = df.readint()
-        self.x = (intcoords % 100)
-        self.y = int(intcoords / 100)
-
-        # ... everything else
-        self.description = df.readstr()
-        self.extratext = df.readstr()
-        self.zeroi1 = df.readint()
-        self.zeroh1 = df.readshort()
-        self.sturdiness = df.readuchar()
-        self.flags = df.readuchar()
-        self.zeroi2 = df.readint()
-        self.zeroi3 = df.readint()
-        self.lock = df.readuchar()
-        self.trap = df.readuchar()
-        self.other = df.readuchar()
-        self.state = df.readuchar()
-        self.unknownh3 = df.readshort()
-        self.script = df.readstr()
-
-        # Items
-        for num in range(8):
-            self.items.append(Item.new(c.book))
-            if (self.savegame):
-                self.items[num].read(df)
-            else:
-                self.items[num].item_name = df.readstr()
-
-    def write(self, df):
-        """ Write the mapscript to the file. """
-
-        df.writeint((self.y*100)+self.x)
-        df.writestr(self.description)
-        df.writestr(self.extratext)
-        df.writeint(self.zeroi1)
-        df.writeshort(self.zeroh1)
-        df.writeuchar(self.sturdiness)
-        df.writeuchar(self.flags)
-        df.writeint(self.zeroi2)
-        df.writeint(self.zeroi3)
-        df.writeuchar(self.lock)
-        df.writeuchar(self.trap)
-        df.writeuchar(self.other)
-        df.writeuchar(self.state)
-        df.writeshort(self.unknownh3)
-        df.writestr(self.script)
-
-        for num in range(8):
-            if (self.savegame):
-                self.items[num].write(df)
-            else:
-                df.writestr(self.items[num].item_name)
-
     def equals(self, script):
         """
         Compare ourselves to another script object.  We're just
