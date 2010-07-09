@@ -2,6 +2,8 @@
 
    09 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
    Book 2 mapscripts now populate in the GUI
+   Book 2 entities now populate in the GUI
+   Saving of Book 2 maps is supported now
 
    24 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
    Book 2 Entities get drawn in map GUI

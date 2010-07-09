@@ -1807,7 +1807,7 @@ class MapGUI(BaseGUI):
         square = self.map.squares[self.sq_y][self.sq_x]
         if (square.entity is None):
             # create a new entity and toggle
-            ent = Entity(self.map.is_savegame())
+            ent = Entity.new(c.book, self.map.is_savegame())
             ent.tozero(self.sq_x, self.sq_y)
             self.map.entities.append(ent)
             square.addentity(ent)

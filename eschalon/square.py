@@ -245,3 +245,15 @@ class B2Square(Square):
         self.scriptid = df.readuchar()
         if self.savegame:
             self.unknowni1 = df.readint()
+
+    def write(self, df):
+        """ Write the square to the file. """
+
+        df.writeuchar(self.wall)
+        df.writeuchar(self.floorimg)
+        df.writeuchar(self.decalimg)
+        df.writeshort(self.wallimg)
+        df.writeuchar(self.walldecalimg)
+        df.writeuchar(self.scriptid)
+        if self.savegame:
+            df.writeint(self.unknowni1)

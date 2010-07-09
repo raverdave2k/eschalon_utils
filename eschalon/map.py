@@ -609,6 +609,68 @@ class B2Map(Map):
         except (IOError, struct.error), e:
             raise LoadException(str(e))
 
+    def write(self):
+        """ Writes out the map to the file descriptor. """
+        
+        # Open the file
+        self.df.open_w()
+
+        # Start
+        self.df.writestr(self.mapname)
+        self.df.writestr(self.openingscript)
+        self.df.writestr(self.unknownstr1)
+        self.df.writestr(self.unknownstr2)
+        self.df.writestr(self.skybox)
+        self.df.writestr(self.soundfile1)
+        self.df.writestr(self.soundfile2)
+        self.df.writestr(self.soundfile3)
+        self.df.writestr(self.soundfile4)
+        self.df.writeuchar(self.unknownc1)
+        self.df.writeuchar(self.unknownc2)
+        self.df.writeuchar(self.unknownc3)
+        self.df.writeuchar(self.unknownc4)
+        self.df.writeuchar(self.color_r)
+        self.df.writeuchar(self.color_g)
+        self.df.writeuchar(self.color_b)
+        self.df.writeuchar(self.color_a)
+        self.df.writeint(self.unknowni1)
+        self.df.writeint(self.unknowni2)
+        self.df.writeint(self.unknowni3)
+        self.df.writeint(self.unknowni4)
+        self.df.writeint(self.tree_set)
+        self.df.writeuchar(self.unknownc5)
+        self.df.writeuchar(self.unknownc6)
+        self.df.writeuchar(self.unknownc7)
+        self.df.writeuchar(self.unknownc8)
+        self.df.writestr(self.unknownstr4)
+        self.df.writestr(self.unknownstr5)
+        self.df.writestr(self.unknownstr6)
+
+        # Squares
+        for row in self.squares:
+            for square in row:
+                square.write(self.df)
+
+        # Scripts
+        for script in self.scripts:
+            script.write(self.df)
+
+        # Any extra data we might have
+        if (len(self.extradata) > 0):
+            self.df.writestr(self.extradata)
+
+        # Clean up
+        self.df.close()
+
+        # Now write out entities, which actually happens in a different file
+        # We open regardless of entities, because we'd have to zero out the
+        # file.
+        self.set_df_ent()
+        self.df_ent.open_w()
+        for entity in self.entities:
+            entity.write(self.df_ent)
+        self.df_ent.close()
+
     def is_global(self):
         return (self.unknownc5 == 0 and self.unknownc6 == 0 and self.unknownc7 == 0)
 

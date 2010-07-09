@@ -275,6 +275,8 @@ class B2Entity(Entity):
         """
         self.movement = 0
         self.statuses = []
+        for i in range(26):
+            self.statuses.append(0)
 
     def _sub_replicate(self, newentity):
         """
