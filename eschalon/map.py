@@ -493,8 +493,13 @@ class B1Map(Map):
         return (self.savegame_1 == 0 and self.savegame_2 == 0 and self.savegame_3 == 0)
 
     def is_savegame(self):
+        return not self.is_global()
         # Savegames are... evil?  I guess?
-        return (self.savegame_1 == 666 and self.savegame_2 == 666 and self.savegame_3 == 666)
+        # ... On the Greenhouse and direct-from-Basilisk versions, the savegame map files have
+        # always had "666" in these values for me.  On at least one Steam version, it looks
+        # like the first value is 320, so we're just going to invert is_global() instead.
+        # Which is really what we should have been doing anyway, but whatever.
+        #return (self.savegame_1 == 666 and self.savegame_2 == 666 and self.savegame_3 == 666)
 
 class B2Map(Map):
     """
@@ -608,4 +613,5 @@ class B2Map(Map):
         return (self.unknownc5 == 0 and self.unknownc6 == 0 and self.unknownc7 == 0)
 
     def is_savegame(self):
-        return (self.unknownc5 != 0 or self.unknownc6 != 0 or self.unknownc7 != 0)
+        return not self.is_global()
+        #return (self.unknownc5 != 0 or self.unknownc6 != 0 or self.unknownc7 != 0)

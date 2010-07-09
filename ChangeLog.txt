@@ -3,9 +3,6 @@
    09 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
    Book 2 mapscripts now populate in the GUI
 
-   29 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
-   Cleaned up Item equality testing
-
    24 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
    Book 2 Entities get drawn in map GUI
 
@@ -14,6 +11,24 @@
 
    18 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
    Initial Book 2 Map object integration
+
+*eschalon_utils-0.6.3 (09 Jul 2010)
+
+   09 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
+   Fixed a bug where entity scripts and object scripts weren't
+      getting updated properly in the map editor.
+   Fixed another similar bug with an unknown item value
+
+*eschalon_utils-0.6.2 (01 Jul 2010)
+
+   01 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
+   Fixed a bug for savegame map loading on Steam versions of Book 1
+
+   30 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
+   Fixed spell checkbox population when loading multiple chars
+
+   29 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
+   Cleaned up Item equality testing
 
    16 Jun 2010; CJ Kucera <pez@apocalyptech.com> :
    Item quantity should allow values greater than 255
