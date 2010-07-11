@@ -394,7 +394,9 @@ class BaseGUI(object):
         """ Special-case to handle changing the item picture properly. """
         self.on_singleval_changed_int(widget)
         if (self.gfx is not None):
-            self.get_widget('item_pic_image').set_from_pixbuf(self.gfx.get_item(widget.get_value_as_int()))
+            (obj, origobj) = self.get_comp_objects()
+            self.get_widget('item_pic_image').set_from_pixbuf(self.gfx.get_item(obj))
+            #self.get_widget('item_pic_image').set_from_pixbuf(self.gfx.get_item(widget.get_value_as_int()))
     
     def on_dropdown_changed(self, widget):
         """ What to do when a dropdown is changed """
@@ -514,7 +516,7 @@ class BaseGUI(object):
         if (item.item_name == '' or self.gfx is None):
             imgwidget.set_from_stock(gtk.STOCK_EDIT, 4)
         else:
-            imgwidget.set_from_pixbuf(self.gfx.get_item(item.pictureid, 26))
+            imgwidget.set_from_pixbuf(self.gfx.get_item(item, 26))
         # to resize buttons, we have to do this:
         tablewidget.check_resize()
         # ... that may be a gtk+ bug, have to submit that to find out.
@@ -703,9 +705,19 @@ class BaseGUI(object):
     def open_itemsel(self, widget):
         if (self.gfx is not None):
             self.imgsel_launch(self.get_widget('pictureid'),
-                    42, 42, 10, 24,
+                    self.gfx.item_dim, self.gfx.item_dim, self.gfx.item_cols, self.gfx.item_rows,
                     self.gfx.get_item,
-                    False)
+                    False, 0,
+                    self.imgsel_item_creation_func)
+
+    def imgsel_item_creation_func(self, id):
+        """
+        Creates a fake Item object with the given picid.
+        """
+        (obj, origobj) = self.get_comp_objects()
+        item = obj.replicate()
+        item.pictureid = id
+        return item
 
     def imgsel_init_bgcolor(self):
         (x, y) = self.imgsel_bgcolor_img.get_size_request()
@@ -728,7 +740,16 @@ class BaseGUI(object):
         self.imgsel_bgcolor_img.set_from_pixbuf(pixbuf)
         self.imgsel_bgcolor_pixbuf = pixbuf
 
-    def imgsel_launch(self, widget, width, height, cols, rows, getfunc, bgcolor_select=True, offset=0):
+    def imgsel_launch(self, widget, width, height, cols, rows, getfunc, bgcolor_select=True, offset=0, getfunc_obj_func=None):
+        """
+        Launches a window to select graphics from one of our files.
+        widget - the spinbutton widget we'll be populating once chosen
+        width/height/cols/rows - dimensions of the graphics file to use
+        getfunc - function (in Gfx) to call to get the individual graphics
+        bgcolor_select - whether to show the background color select area
+        offset - not sure, actually
+        getfunc_req_obj - Does our getfunc require an object, rather than the ID?
+        """
         self.imgsel_init = False
         self.imgsel_clean = []
         self.imgsel_window = self.get_widget('imgselwindow')
@@ -753,6 +774,7 @@ class BaseGUI(object):
         self.imgsel_mousey_prev = -1
         self.imgsel_blank = None
         self.imgsel_getfunc = getfunc
+        self.imgsel_getfunc_obj_func = getfunc_obj_func
         self.imgsel_pixbuffunc = None
         self.imgsel_init_bgcolor()
         req_width = self.imgsel_x+25
@@ -786,7 +808,10 @@ class BaseGUI(object):
         imgnum = (y*self.imgsel_cols)+x
         if (imgnum < 0 or imgnum > (self.imgsel_rows * self.imgsel_cols)):
             return
-        pixbuf = self.imgsel_getfunc(imgnum+self.imgsel_offset, None, True)
+        if self.imgsel_getfunc_obj_func:
+            pixbuf = self.imgsel_getfunc(self.imgsel_getfunc_obj_func(imgnum+self.imgsel_offset), None, True)
+        else:
+            pixbuf = self.imgsel_getfunc(imgnum+self.imgsel_offset, None, True)
         if (self.imgsel_pixbuffunc is not None):
             pixbuf = self.imgsel_pixbuffunc(pixbuf)
         if (pixbuf is None):

@@ -1500,11 +1500,7 @@ class MapGUI(BaseGUI):
         widget = self.get_widget('item_%d_%d_text' % (num, page))
         imgwidget = self.get_widget('item_%d_%d_image' % (num, page))
         item = self.map.squares[self.sq_y][self.sq_x].scripts[page].items[num]
-        # TODO: temporary hack because we're not loading our image sheets
-        gfx = self.gfx
-        self.gfx = None
         self.populate_item_button(item, widget, imgwidget, self.get_widget('itemtable_%d' % (page)))
-        self.gfx = gfx
 
     def on_script_dropdown_changed(self, widget):
         """ Handle the trap dropdown change. """
@@ -1782,7 +1778,7 @@ class MapGUI(BaseGUI):
         Script object and handles adding it to the notebook.
         """
         square = self.map.squares[self.sq_y][self.sq_x]
-        script = Mapscript(self.map.is_savegame())
+        script = Mapscript.new(c.book, self.map.is_savegame())
         script.tozero(self.sq_x, self.sq_y)
         self.map.scripts.append(script)
         square.addscript(script)

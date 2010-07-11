@@ -1,5 +1,8 @@
 # ChangeLog for Eschalon Savefile Editor
 
+   10 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
+   Item images populate in the GUI for book 2
+
    09 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
    Book 2 mapscripts now populate in the GUI
    Book 2 entities now populate in the GUI

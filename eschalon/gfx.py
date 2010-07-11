@@ -267,7 +267,6 @@ class Gfx(object):
             }
 
         # Some graphic-specific indexes/flags
-        self.itemcache = None
         self.floorcache = None
         self.decalcache = None
         self.objcache1 = None
@@ -325,6 +324,9 @@ class B1Gfx(Gfx):
     book = 1
     wall_types = {}
     squarebuf_mult = 1
+    item_dim = 42
+    item_cols = 10
+    item_rows = 24
 
     def __init__(self, prefs, datadir):
 
@@ -347,6 +349,9 @@ class B1Gfx(Gfx):
         self.unknowni1 = -1
         self.fileindex = {}
         self.zeroindex = -1
+
+        # Book 1 specific caches
+        self.itemcache = None
 
         # Graphics PAK file
         self.pakloc = os.path.join(prefs.get_str('paths', 'gamedir'), 'gfx.pak')
@@ -509,6 +514,9 @@ class B2Gfx(Gfx):
     book = 2
     wall_types = {}
     squarebuf_mult = 1.5
+    item_dim = 50
+    item_cols = 10
+    item_rows = 10
 
     def __init__(self, prefs, datadir):
 
@@ -519,13 +527,30 @@ class B2Gfx(Gfx):
             self.wall_types[i] = self.TYPE_TREE
         for i in range(256, 513):
             self.wall_types[i] = self.TYPE_WALL
+
+        # Book 2 specific caches
+        self.treecache = [ None, None, None ]
+        self.hugegfxcache = {}
+        self.itemcache = {
+                'armor': None,
+                'magic': None,
+                'misc': None,
+                'weapons': None
+            }
+
+        # Item type graphic file lookups
+        self.itemtype_gfxcache_idx = {}
+        for num in range(50):
+            self.itemtype_gfxcache_idx[num] = 'misc'
+        for num in range(1, 3):
+            self.itemtype_gfxcache_idx[num] = 'weapons'
+        for num in range(3, 11):
+            self.itemtype_gfxcache_idx[num] = 'armor'
+        for num in range(11, 16) + [17]:
+            self.itemtype_gfxcache_idx[num] = 'magic'
         
         # Store our gamedir
         self.gamedir = prefs.get_str('paths', 'gamedir_b2')
-
-        # Other stuff
-        self.treecache = [ None, None, None ]
-        self.hugegfxcache = {}
 
         # Finally call the parent constructor
         super(B2Gfx, self).__init__(prefs, datadir)
@@ -542,10 +567,14 @@ class B2Gfx(Gfx):
         else:
             raise LoadException('We haven\'t initialized ourselves yet')
 
-    def get_item(self, itemnum, size=None, gdk=True):
-        if (self.itemcache is None):
-            self.itemcache = GfxCache(self.readfile('items_mastersheet.png'), 42, 42, 10)
-        return self.itemcache.getimg(itemnum+1, size, gdk)
+    def get_item(self, item, size=None, gdk=True):
+        if item.type not in self.itemtype_gfxcache_idx:
+            idx = 'misc'
+        else:
+            idx = self.itemtype_gfxcache_idx[item.type]
+        if (self.itemcache[idx] is None):
+            self.itemcache[idx] = GfxCache(self.readfile('%s_sheet.png' % (idx)), 50, 50, 10)
+        return self.itemcache[idx].getimg(item.pictureid+1, size, gdk)
 
     def get_floor(self, floornum, size=None, gdk=False):
         if (floornum == 0):
