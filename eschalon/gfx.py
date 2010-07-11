@@ -39,9 +39,16 @@ class GfxCache(object):
     time to abstract the common stuff out.  So there.
     """
 
-    def __init__(self, pngdata, width, height, cols):
+    def __init__(self, pngdata, width, height, cols, overlay_func=None):
         # First load the data as a Cairo surface
         self.surface = cairo.ImageSurface.create_from_png(StringIO.StringIO(pngdata))
+
+        if overlay_func:
+            self.surface = overlay_func(self.surface, width, height, cols)
+            df = StringIO.StringIO()
+            self.surface.write_to_png(df)
+            pngdata = df.getvalue()
+            df.close()
 
         # For ease-of-use, we're also going to import it to a GDK Pixbuf
         # This shouldn't hurt performance really since there's only a few files
@@ -537,6 +544,12 @@ class B2Gfx(Gfx):
                 'misc': None,
                 'weapons': None
             }
+        self.itemcache_overlayfunc = {
+                'armor': self.item_overlayfunc_armor,
+                'magic': None,
+                'misc': None,
+                'weapons': self.item_overlayfunc_weapon
+            }
 
         # Item type graphic file lookups
         self.itemtype_gfxcache_idx = {}
@@ -554,6 +567,49 @@ class B2Gfx(Gfx):
 
         # Finally call the parent constructor
         super(B2Gfx, self).__init__(prefs, datadir)
+
+    def item_overlayfunc(self, surface, width, height, cols, type):
+        """
+        In Book 2, the Weapon and Armor graphics don't have a background, which looks
+        a little odd in the GUI.  So we construct them based on the given elements in
+        the data dir.
+        """
+
+        # First load in the background and its frame
+        frame = self.readfile('icon_frame.png')
+        background = self.readfile('%s_icon_blank.png' % (type))
+        framesurf = cairo.ImageSurface.create_from_png(StringIO.StringIO(frame))
+        backsurf = cairo.ImageSurface.create_from_png(StringIO.StringIO(background))
+
+        # Now create a new surface and tile the background over the whole thing
+        newsurf = cairo.ImageSurface(cairo.FORMAT_ARGB32, surface.get_width(), surface.get_height())
+        newctx = cairo.Context(newsurf)
+        rows = int(surface.get_height()/height)
+        for row in range(rows):
+            for col in range(cols):
+                newctx.set_source_surface(backsurf, col*width, row*height)
+                newctx.rectangle(col*width, row*height, width, height)
+                newctx.paint()
+
+        # Overlay our passed-in surface on top
+        newctx.set_source_surface(surface, 0, 0)
+        newctx.rectangle(0, 0, surface.get_width(), surface.get_height())
+        newctx.paint()
+
+        # Now tile the frame on top of every item
+        for row in range(rows):
+            for col in range(cols):
+                newctx.set_source_surface(framesurf, col*width, row*height)
+                newctx.rectangle(col*width, row*height, width, height)
+                newctx.paint()
+
+        return newsurf
+
+    def item_overlayfunc_armor(self, surface, width, height, cols):
+        return self.item_overlayfunc(surface, width, height, cols, 'armor')
+
+    def item_overlayfunc_weapon(self, surface, width, height, cols):
+        return self.item_overlayfunc(surface, width, height, cols, 'weapon')
 
     def readfile(self, filename):
         """
@@ -573,7 +629,7 @@ class B2Gfx(Gfx):
         else:
             idx = self.itemtype_gfxcache_idx[item.type]
         if (self.itemcache[idx] is None):
-            self.itemcache[idx] = GfxCache(self.readfile('%s_sheet.png' % (idx)), 50, 50, 10)
+            self.itemcache[idx] = GfxCache(self.readfile('%s_sheet.png' % (idx)), 50, 50, 10, self.itemcache_overlayfunc[idx])
         return self.itemcache[idx].getimg(item.pictureid+1, size, gdk)
 
     def get_floor(self, floornum, size=None, gdk=False):
