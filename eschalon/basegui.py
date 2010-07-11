@@ -134,6 +134,7 @@ class BaseGUI(object):
                 'on_singleval_changed_int_itempic': self.on_singleval_changed_int_itempic,
                 'on_singleval_changed_float': self.on_singleval_changed_float,
                 'on_dropdown_changed': self.on_dropdown_changed,
+                'on_type_dropdown_changed': self.on_type_dropdown_changed,
                 'on_checkbox_changed': self.on_checkbox_changed,
                 'on_checkbox_bit_changed': self.on_checkbox_bit_changed,
                 'on_modifier_changed': self.on_modifier_changed,
@@ -390,13 +391,16 @@ class BaseGUI(object):
             (labelwidget, label) = self.get_label_cache(wname)
             self.set_changed_widget((abs(origobj.__dict__[wname] - obj.__dict__[wname])<1e-6), wname, labelwidget, label)
 
-    def on_singleval_changed_int_itempic(self, widget):
-        """ Special-case to handle changing the item picture properly. """
-        self.on_singleval_changed_int(widget)
+    def update_itempic_image(self):
         if (self.gfx is not None):
             (obj, origobj) = self.get_comp_objects()
             self.get_widget('item_pic_image').set_from_pixbuf(self.gfx.get_item(obj))
             #self.get_widget('item_pic_image').set_from_pixbuf(self.gfx.get_item(widget.get_value_as_int()))
+
+    def on_singleval_changed_int_itempic(self, widget):
+        """ Special-case to handle changing the item picture properly. """
+        self.on_singleval_changed_int(widget)
+        self.update_itempic_image()
     
     def on_dropdown_changed(self, widget):
         """ What to do when a dropdown is changed """
@@ -406,6 +410,15 @@ class BaseGUI(object):
         if (self.curitemtype != self.ITEM_MAP):
             (labelwidget, label) = self.get_label_cache(wname)
             self.set_changed_widget((origobj.__dict__[wname] == obj.__dict__[wname]), wname, labelwidget, label)
+    
+    def on_type_dropdown_changed(self, widget):
+        """
+        What to do when the item type dropdown is changed.
+        Only has an actual effect in Book 2, though technically Book 1 will go through
+        the motions as well.
+        """
+        self.on_dropdown_changed(widget)
+        self.update_itempic_image()
 
     def on_checkbox_changed(self, widget):
         """ What to do when a regular checkbox changes. """

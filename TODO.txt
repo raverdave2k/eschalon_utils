@@ -28,7 +28,6 @@ Character GUI
  * Need to enlarge the GUI windows a bit; on my laptop they're too small
  * When copying items, the "condition"-changed indicator doesn't populate
    automatically
- * Item images need to update properly when the item type changes
 
 Map GUI
 -------
