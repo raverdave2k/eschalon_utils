@@ -334,6 +334,34 @@ class B1Gfx(Gfx):
     item_dim = 42
     item_cols = 10
     item_rows = 24
+    square_width = 52
+    square_height = 26
+    floor_cols = 6
+    floor_rows = 32
+    decal_cols = 6
+    decal_rows = 32
+    obj_a_width = 52
+    obj_a_height = 52
+    obj_a_cols = 6
+    obj_a_rows = 16
+    obj_a_offset = 1
+    obj_b_width = 52
+    obj_b_height = 78
+    obj_b_cols = 6
+    obj_b_rows = 10
+    obj_b_offset = 101
+    obj_c_width = 52
+    obj_c_height = 78
+    obj_c_cols = 6
+    obj_c_rows = 10
+    obj_c_offset = 161
+    obj_d_width = 52
+    obj_d_height = 130
+    obj_d_cols = 5
+    obj_d_rows = 1
+    obj_d_offset = 251
+    walldecal_cols = 6
+    walldecal_rows = 10
 
     def __init__(self, prefs, datadir):
 
@@ -524,6 +552,29 @@ class B2Gfx(Gfx):
     item_dim = 50
     item_cols = 10
     item_rows = 10
+    square_width = 64
+    square_height = 32
+    floor_cols = 8
+    floor_rows = 16
+    decal_cols = 16
+    decal_rows = 16
+    obj_a_width = 64
+    obj_a_height = 64
+    obj_a_cols = 16
+    obj_a_rows = 10
+    obj_a_offset = 1
+    obj_c_width = 64
+    obj_c_height = 96
+    obj_c_cols = 16
+    obj_c_rows = 10
+    obj_c_offset = 256
+    obj_d_width = 96
+    obj_d_height = 160
+    obj_d_cols = 5
+    obj_d_rows = 1
+    obj_d_offset = 251
+    walldecal_cols = 16
+    walldecal_rows = 10
 
     def __init__(self, prefs, datadir):
 
@@ -666,6 +717,8 @@ class B2Gfx(Gfx):
                 self.treecache[treeset] = GfxCache(self.readfile('iso_trees%d.png' % (treeset)), 96, 160, 5)
             if (objnum in self.treemap):
                 # note the size difference for Book 2 trees (50% wider)
+                if not size:
+                    size = 64
                 offset = -int(size/4)
                 size = int(size * 1.5)
                 return (self.treecache[treeset].getimg(self.treemap[objnum], size, gdk), 4, offset)

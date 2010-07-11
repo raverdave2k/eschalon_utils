@@ -1968,37 +1968,37 @@ class MapGUI(BaseGUI):
     def open_floorsel(self, widget):
         """ Show the floor selection window. """
         self.imgsel_launch(self.get_widget('floorimg'),
-                52, 26, 6, 32,
+                self.gfx.square_width, self.gfx.square_height, self.gfx.floor_cols, self.gfx.floor_rows,
                 self.gfx.get_floor, True, 1)
 
     def open_draw_floorsel(self, widget):
         """ Show the floor selection window for our drawing widget. """
         self.imgsel_launch(self.draw_floor_spin,
-                52, 26, 6, 32,
+                self.gfx.square_width, self.gfx.square_height, self.gfx.floor_cols, self.gfx.floor_rows,
                 self.gfx.get_floor, True, 1)
 
     def open_decalsel(self, widget):
         """ Show the decal selection window. """
         self.imgsel_launch(self.get_widget('decalimg'),
-                52, 26, 6, 32,
+                self.gfx.square_width, self.gfx.square_height, self.gfx.decal_cols, self.gfx.decal_rows,
                 self.gfx.get_decal, True, 1)
 
     def open_draw_decalsel(self, widget):
         """ Show the decal selection window for our drawing widget. """
         self.imgsel_launch(self.draw_decal_spin,
-                52, 26, 6, 32,
+                self.gfx.square_width, self.gfx.square_height, self.gfx.decal_cols, self.gfx.decal_rows,
                 self.gfx.get_decal, True, 1)
 
     def open_walldecalsel(self, widget):
         """ Show the wall decal selection window. """
         self.imgsel_launch(self.get_widget('walldecalimg'),
-                52, 78, 6, 10,
+                self.gfx.square_width, self.gfx.square_height*3, self.gfx.walldecal_cols, self.gfx.walldecal_rows,
                 self.gfx.get_object_decal, True, 1)
 
     def open_draw_walldecalsel(self, widget):
         """ Show the walldecal selection window for our drawing widget. """
         self.imgsel_launch(self.draw_walldecal_spin,
-                52, 78, 6, 10,
+                self.gfx.square_width, self.gfx.square_height*3, self.gfx.walldecal_cols, self.gfx.walldecal_rows,
                 self.gfx.get_object_decal, True, 1)
 
     def objsel_fix_pixbuf(self, pixbuf):
@@ -2012,7 +2012,21 @@ class MapGUI(BaseGUI):
         to reduce code duplication here.  This should probably be
         in a class, somehow, instead of a dict.
         """
+        if c.book == 1:
+            self.get_widget('imgsel_scroll1').show()
+            letters = ['d', 'c', 'b', 'a']
+            self.get_widget('objsel_a_title_label').set_label('Set A (misc)')
+            self.get_widget('objsel_b_title_label').set_label('Set B (misc)')
+            self.get_widget('objsel_c_title_label').set_label('Set C (walls)')
+            self.get_widget('objsel_d_title_label').set_label('Set D (trees)')
+        else:
+            self.get_widget('imgsel_scroll1').hide()
+            letters = ['c', 'd', 'a']
+            self.get_widget('objsel_a_title_label').set_label('Set A (misc)')
+            self.get_widget('objsel_c_title_label').set_label('Set B (walls)')
+            self.get_widget('objsel_d_title_label').set_label('Set C (trees)')
         self.imgsel_window = self.get_widget('objselwindow')
+        self.imgsel_window.set_size_request((self.gfx.obj_a_width*self.gfx.obj_a_cols)+60, 600)
         if (spinwidget is None):
             self.imgsel_widget = self.get_widget('wallimg')
         else:
@@ -2021,6 +2035,7 @@ class MapGUI(BaseGUI):
         self.imgsel_bgcolor_img = self.get_widget('objsel_bgcolor_img')
         self.imgsel_bgcolor_event = self.get_widget('objsel_bgcolor_event')
         self.imgsel_getfunc = self.gfx.get_object
+        self.imgsel_getfunc_obj_func = None
         self.imgsel_pixbuffunc = self.objsel_fix_pixbuf
         self.imgsel_init_bgcolor()
         self.imgsel_blank_color = self.imgsel_generate_grayscale(127)
@@ -2029,79 +2044,81 @@ class MapGUI(BaseGUI):
                 'init': False,
                 'clean': [],
                 'area': self.get_widget('objsel_a_area'),
-                'width': 52,
-                'height': 52,
-                'cols': 6,
-                'rows': 16,
-                'x': 52*6,
-                'y': 52*16,
-                'offset': 1,
+                'width': self.gfx.obj_a_width,
+                'height': self.gfx.obj_a_height,
+                'cols': self.gfx.obj_a_cols,
+                'rows': self.gfx.obj_a_rows,
+                'x': self.gfx.obj_a_width*self.gfx.obj_a_cols,
+                'y': self.gfx.obj_a_height*self.gfx.obj_a_rows,
+                'offset': self.gfx.obj_a_offset,
                 'mousex': -1,
                 'mousey': -1,
                 'mousex_prev': -1,
                 'mousey_prev': -1,
                 'blank': None,
+                'page': 0,
             }
-        self.objsel_panes['b'] = {
-                'init': False,
-                'clean': [],
-                'area': self.get_widget('objsel_b_area'),
-                'width': 52,
-                'height': 78,
-                'cols': 6,
-                'rows': 10,
-                'x': 52*6,
-                'y': 78*10,
-                'offset': 101,
-                'mousex': -1,
-                'mousey': -1,
-                'mousex_prev': -1,
-                'mousey_prev': -1,
-                'blank': None,
-            }
+        if c.book == 1:
+            self.objsel_panes['b'] = {
+                    'init': False,
+                    'clean': [],
+                    'area': self.get_widget('objsel_b_area'),
+                    'width': self.gfx.obj_b_width,
+                    'height': self.gfx.obj_b_height,
+                    'cols': self.gfx.obj_b_cols,
+                    'rows': self.gfx.obj_b_rows,
+                    'x': self.gfx.obj_b_width*self.gfx.obj_b_cols,
+                    'y': self.gfx.obj_b_height*self.gfx.obj_b_rows,
+                    'offset': self.gfx.obj_b_offset,
+                    'mousex': -1,
+                    'mousey': -1,
+                    'mousex_prev': -1,
+                    'mousey_prev': -1,
+                    'blank': None,
+                    'page': 1,
+                }
         self.objsel_panes['c'] = {
                 'init': False,
                 'clean': [],
                 'area': self.get_widget('objsel_c_area'),
-                'width': 52,
-                'height': 78,
-                'cols': 6,
-                'rows': 10,
-                'x': 52*6,
-                'y': 78*10,
-                'offset': 161,
+                'width': self.gfx.obj_c_width,
+                'height': self.gfx.obj_c_height,
+                'cols': self.gfx.obj_c_cols,
+                'rows': self.gfx.obj_c_rows,
+                'x': self.gfx.obj_c_width*self.gfx.obj_c_cols,
+                'y': self.gfx.obj_c_height*self.gfx.obj_c_rows,
+                'offset': self.gfx.obj_c_offset,
                 'mousex': -1,
                 'mousey': -1,
                 'mousex_prev': -1,
                 'mousey_prev': -1,
                 'blank': None,
+                'page': 2,
             }
         self.objsel_panes['d'] = {
                 'init': False,
                 'clean': [],
                 'area': self.get_widget('objsel_d_area'),
-                'width': 52,
-                'height': 130,
-                'cols': 5,
-                'rows': 1,
-                'x': 52*5,
-                'y': 130,
-                'offset': 251,
+                'width': self.gfx.obj_d_width,
+                'height': self.gfx.obj_d_height,
+                'cols': self.gfx.obj_d_cols,
+                'rows': self.gfx.obj_d_rows,
+                'x': self.gfx.obj_d_width*self.gfx.obj_d_cols,
+                'y': self.gfx.obj_d_height*self.gfx.obj_d_rows,
+                'offset': self.gfx.obj_d_offset,
                 'mousex': -1,
                 'mousey': -1,
                 'mousex_prev': -1,
                 'mousey_prev': -1,
                 'blank': None,
+                'page': 3,
             }
         # Set initial page
-        curpage = 3
-        letters = ['d', 'c', 'b', 'a']
+        curpage = 0
         for letter in letters:
             if (self.imgsel_widget.get_value_as_int() >= self.objsel_panes[letter]['offset']):
+                curpage = self.objsel_panes[letter]['page']
                 break
-            curpage -= 1
-        if (curpage < 0):
-            curpage = 0
         self.objsel_book.set_current_page(curpage)
         self.objsel_current = ''
         #self.load_objsel_vars(self.get_widget('objsel_%s_area' % (letters[3-curpage])))
