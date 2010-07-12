@@ -62,11 +62,6 @@ Map GUI
  * Smartdrawing should be a little less destructive when doing stuff.
    (overwriting non-grass/sand decals, etc)
  * Click-and-drag seems choppy in Win
- * eschalon/gfx.py:139: GtkWarning:
-     gdk_pixbuf_copy_area: assertion `src_y >= 0 && src_y + height <=
-     src_pixbuf->height' failed
-   0, 0)
-   - when clicking on Eleanise in Eastwillow, for instance
  * Entity graphics aren't quite right for many entities
 
 Internal

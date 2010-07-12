@@ -700,6 +700,8 @@ class B2Gfx(Gfx):
 
     # Returns a tuple, first item is the surface, second is the extra height to add while drawing
     def get_object(self, objnum, size=None, gdk=False, treeset=0):
+        if (objnum == 0):
+            return (None, 0, 0)
         try:
             walltype = self.wall_types[objnum]
         except TypeError:
