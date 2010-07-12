@@ -1023,7 +1023,7 @@ class MapGUI(BaseGUI):
     def on_wall_changed(self, widget):
         """ Update the appropriate image when necessary. """
         self.on_singleval_square_changed_int(widget)
-        (pixbuf, height, offset) = self.gfx.get_object(widget.get_value_as_int(), None, True)
+        (pixbuf, height, offset) = self.gfx.get_object(widget.get_value_as_int(), None, True, self.map.tree_set)
         if (pixbuf is None):
             self.get_widget('wallimg_image').set_from_stock(gtk.STOCK_EDIT, 2)
         else:
@@ -1032,7 +1032,7 @@ class MapGUI(BaseGUI):
 
     def on_draw_wall_changed(self, widget):
         """ Update the appropriate image when necessary. """
-        (pixbuf, height, offset) = self.gfx.get_object(widget.get_value_as_int(), None, True)
+        (pixbuf, height, offset) = self.gfx.get_object(widget.get_value_as_int(), None, True, self.map.tree_set)
         if (pixbuf is None):
             self.get_widget('draw_wall_img').set_from_stock(gtk.STOCK_EDIT, 2)
         else:
@@ -2036,6 +2036,7 @@ class MapGUI(BaseGUI):
         self.imgsel_bgcolor_event = self.get_widget('objsel_bgcolor_event')
         self.imgsel_getfunc = self.gfx.get_object
         self.imgsel_getfunc_obj_func = None
+        self.imgsel_getfunc_extraarg = self.map.tree_set
         self.imgsel_pixbuffunc = self.objsel_fix_pixbuf
         self.imgsel_init_bgcolor()
         self.imgsel_blank_color = self.imgsel_generate_grayscale(127)
@@ -2828,7 +2829,7 @@ class MapGUI(BaseGUI):
                 if (pixbuf is not None):
                     pixbuf.composite(comp_pixbuf, 17, 88, 18, 30, 17, 88, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
         if (square.wallimg > 0):
-            (pixbuf, pixheight, offset) = self.gfx.get_object(square.wallimg, 52, True)
+            (pixbuf, pixheight, offset) = self.gfx.get_object(square.wallimg, 52, True, self.map.tree_set)
             if (pixbuf is not None):
                 pixbuf.composite(comp_pixbuf, 0, 26*(4-pixheight), 52, 26*(pixheight+1), 0, 26*(4-pixheight), 1, 1, gtk.gdk.INTERP_NEAREST, 255)
             if (self.req_book == 2 and square.wallimg == 349):

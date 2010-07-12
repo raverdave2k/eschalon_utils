@@ -788,6 +788,7 @@ class BaseGUI(object):
         self.imgsel_blank = None
         self.imgsel_getfunc = getfunc
         self.imgsel_getfunc_obj_func = getfunc_obj_func
+        self.imgsel_getfunc_extraarg = None
         self.imgsel_pixbuffunc = None
         self.imgsel_init_bgcolor()
         req_width = self.imgsel_x+25
@@ -822,9 +823,13 @@ class BaseGUI(object):
         if (imgnum < 0 or imgnum > (self.imgsel_rows * self.imgsel_cols)):
             return
         if self.imgsel_getfunc_obj_func:
-            pixbuf = self.imgsel_getfunc(self.imgsel_getfunc_obj_func(imgnum+self.imgsel_offset), None, True)
+            loadnum = self.imgsel_getfunc_obj_func(imgnum+self.imgsel_offset)
         else:
-            pixbuf = self.imgsel_getfunc(imgnum+self.imgsel_offset, None, True)
+            loadnum = imgnum+self.imgsel_offset
+        if self.imgsel_getfunc_extraarg is not None:
+            pixbuf = self.imgsel_getfunc(loadnum, None, True, self.imgsel_getfunc_extraarg)
+        else:
+            pixbuf = self.imgsel_getfunc(loadnum, None, True)
         if (self.imgsel_pixbuffunc is not None):
             pixbuf = self.imgsel_pixbuffunc(pixbuf)
         if (pixbuf is None):
