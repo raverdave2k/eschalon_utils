@@ -2630,10 +2630,13 @@ class MapGUI(BaseGUI):
                 sq_ctx.paint()
                 drawn = True
                 # Check to see if we should draw a flame
-                if (self.req_book == 1 and square.decalimg == 52):
+                if ((self.req_book == 1 and square.decalimg == 52) or
+                    (self.req_book == 2 and square.decalimg == 101)):
                     pixbuf = self.gfx.get_flame(self.curzoom)
                     if (pixbuf is not None):
-                        xoffset = self.z_halfwidth-int(pixbuf.get_width()/2)
+                        # TODO: in book 2, campfire wall objects will overwrite some of our campfire flame
+                        # (note that the campfire wall object will NOT provide an in-game flame on its own)
+                        xoffset = self.z_halfwidth-int(pixbuf.get_width()/2)+self.z_squarebuf_offset
                         yoffset = int(self.z_height*0.4)
                         sq_ctx.set_source_surface(pixbuf, xoffset, self.z_3xheight+yoffset)
                         sq_ctx.paint()
@@ -2662,6 +2665,14 @@ class MapGUI(BaseGUI):
                 sq_ctx.set_source_surface(pixbuf, offset+self.z_squarebuf_offset, self.z_height*(4-pixheight))
                 sq_ctx.paint()
                 drawn = True
+                # TODO: this object should really be a TYPE_OBJ instead...
+                if (self.req_book == 2 and square.wallimg == 349):
+                    pixbuf = self.gfx.get_flame(self.curzoom)
+                    if (pixbuf is not None):
+                        xoffset = self.z_halfwidth-int(pixbuf.get_width()/2)+self.z_squarebuf_offset
+                        yoffset = int(self.z_height*0.3)
+                        sq_ctx.set_source_surface(pixbuf, xoffset, self.z_height+yoffset)
+                        sq_ctx.paint()
 
         # Draw trees
         if (self.tree_toggle.get_active() and walltype == self.gfx.TYPE_TREE):
@@ -2679,15 +2690,18 @@ class MapGUI(BaseGUI):
                 sq_ctx.paint()
                 drawn = True
                 # Check to see if we should draw a flame
-                if (self.req_book == 1 and (square.walldecalimg == 17 or square.walldecalimg == 18)):
+                if ((self.req_book == 1 and (square.walldecalimg == 17 or square.walldecalimg == 18)) or
+                    (self.req_book == 2 and (square.walldecalimg == 2 or square.walldecalimg == 4))):
                     pixbuf = self.gfx.get_flame(self.curzoom)
                     if (pixbuf is not None):
                         xoffset = int(pixbuf.get_width()*0.3)
                         yoffset = int(self.z_height/4)
-                        if (square.walldecalimg == 17):
-                            sq_ctx.set_source_surface(pixbuf, self.curzoom-pixbuf.get_width()-xoffset, self.z_2xheight+yoffset)
+                        if (self.req_book == 2):
+                            yoffset -= 1
+                        if (square.walldecalimg == 17 or square.walldecalimg == 2):
+                            sq_ctx.set_source_surface(pixbuf, self.curzoom-pixbuf.get_width()-xoffset+self.z_squarebuf_offset, self.z_2xheight+yoffset)
                         else:
-                            sq_ctx.set_source_surface(pixbuf, xoffset, self.z_2xheight+yoffset)
+                            sq_ctx.set_source_surface(pixbuf, xoffset+self.z_squarebuf_offset, self.z_2xheight+yoffset)
                         sq_ctx.paint()
 
         # Draw the entity if needed

@@ -742,7 +742,8 @@ class B2Gfx(Gfx):
             df = open(os.path.join(self.datadir, 'torch_single.png'), 'rb')
             flamedata = df.read()
             df.close()
-            self.flamecache = B2GfxEntCache(flamedata, 1, 1)
+            # TODO: This is, um, highly improper.
+            self.flamecache = B1GfxEntCache(flamedata, 1, 1)
         # TODO: I don't like hardcoding "64" here
         if (size is None):
             size = 64
