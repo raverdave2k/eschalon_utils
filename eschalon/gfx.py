@@ -444,10 +444,10 @@ class B1Gfx(Gfx):
         df.close()
         self.loaded = True
 
-    def get_item(self, itemnum, size=None, gdk=True):
+    def get_item(self, item, size=None, gdk=True):
         if (self.itemcache is None):
             self.itemcache = GfxCache(self.readfile('items_mastersheet.png'), 42, 42, 10)
-        return self.itemcache.getimg(itemnum+1, size, gdk)
+        return self.itemcache.getimg(item.pictureid+1, size, gdk)
 
     def get_floor(self, floornum, size=None, gdk=False):
         if (floornum == 0):
