@@ -601,6 +601,7 @@ class B2Gfx(Gfx):
                 'misc': None,
                 'weapons': self.item_overlayfunc_weapon
             }
+        self.zappercache = None
 
         # Item type graphic file lookups
         self.itemtype_gfxcache_idx = {}
@@ -744,10 +745,25 @@ class B2Gfx(Gfx):
             df.close()
             # TODO: This is, um, highly improper.
             self.flamecache = B1GfxEntCache(flamedata, 1, 1)
+            #self.flamecache = SingleImageGfxCache(flamedata)
         # TODO: I don't like hardcoding "64" here
         if (size is None):
             size = 64
         return self.flamecache.getimg(1, int(size*self.flamecache.size_scale), gdk)
+
+    def get_zapper(self, size=None, gdk=False):
+        """
+        Grabs a zapper image.
+        """
+        if (self.zappercache is None):
+            df = open(os.path.join(self.datadir, 'zappy_single.png'), 'rb')
+            zapperdata = df.read()
+            df.close()
+            self.zappercache = SingleImageGfxCache(zapperdata)
+        # TODO: I don't like hardcoding "64" here
+        if (size is None):
+            size = 64
+        return self.zappercache.getimg(1, int(size*self.zappercache.size_scale), gdk)
 
     def get_huge_gfx(self, file, size=None, gdk=False):
         """

@@ -2658,6 +2658,15 @@ class MapGUI(BaseGUI):
                 sq_ctx.paint()
                 drawn = True
 
+        # Draw a zapper
+        if (self.req_book == 2 and self.object_toggle.get_active() and square.scriptid == 19):
+            pixbuf = self.gfx.get_zapper(self.curzoom)
+            if pixbuf is not None:
+                xoffset = self.z_squarebuf_offset
+                yoffset = 0
+                sq_ctx.set_source_surface(pixbuf, xoffset, self.z_3xheight+yoffset)
+                sq_ctx.paint()
+
         # Draw walls
         if (self.wall_toggle.get_active() and walltype == self.gfx.TYPE_WALL):
             (pixbuf, pixheight, offset) = self.gfx.get_object(wallid, self.curzoom)

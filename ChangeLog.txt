@@ -2,6 +2,7 @@
 
    11 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
    Book 2 Map element lookup screens populate properly
+   Torches and Zappers display in Book 2 maps
 
    10 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
    Item images populate in the GUI for book 2
