@@ -2822,7 +2822,8 @@ class MapGUI(BaseGUI):
             pixbuf = self.gfx.get_decal(square.decalimg, 52, True)
             if (pixbuf is not None):
                 pixbuf.composite(comp_pixbuf, 0, 104, 52, 26, 0, 104, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
-            if (square.decalimg == 52):
+            if ((self.req_book == 1 and square.decalimg == 52) or
+                (self.req_book == 2 and square.decalimg == 101)):
                 pixbuf = self.gfx.get_flame(52, True)
                 if (pixbuf is not None):
                     pixbuf.composite(comp_pixbuf, 17, 88, 18, 30, 17, 88, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
@@ -2830,14 +2831,23 @@ class MapGUI(BaseGUI):
             (pixbuf, pixheight, offset) = self.gfx.get_object(square.wallimg, 52, True)
             if (pixbuf is not None):
                 pixbuf.composite(comp_pixbuf, 0, 26*(4-pixheight), 52, 26*(pixheight+1), 0, 26*(4-pixheight), 1, 1, gtk.gdk.INTERP_NEAREST, 255)
+            if (self.req_book == 2 and square.wallimg == 349):
+                pixbuf = self.gfx.get_flame(52, True)
+                if (pixbuf is not None):
+                    pixbuf.composite(comp_pixbuf, 17, 35, 18, 30, 17, 35, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
         if (square.walldecalimg > 0):
             pixbuf = self.gfx.get_object_decal(square.walldecalimg, 52, True)
             if (pixbuf is not None):
                 pixbuf.composite(comp_pixbuf, 0, 52, 52, 78, 0, 52, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
-            if (square.walldecalimg == 17 or square.walldecalimg == 18):
+            if ((self.req_book == 1 and (square.walldecalimg == 17 or square.walldecalimg == 18)) or
+                (self.req_book == 2 and (square.walldecalimg == 2 or square.walldecalimg == 4))):
                 pixbuf = self.gfx.get_flame(52, True)
                 if (pixbuf is not None):
                     if (square.walldecalimg == 17):
+                        pixbuf.composite(comp_pixbuf, 29, 58, 18, 30, 29, 58, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
+                    elif (square.walldecalimg == 18):
+                        pixbuf.composite(comp_pixbuf, 5, 58, 18, 30, 5, 58, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
+                    elif (square.walldecalimg == 2):
                         pixbuf.composite(comp_pixbuf, 29, 58, 18, 30, 29, 58, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
                     else:
                         pixbuf.composite(comp_pixbuf, 5, 58, 18, 30, 5, 58, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
