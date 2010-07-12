@@ -62,7 +62,6 @@ Map GUI
  * Smartdrawing should be a little less destructive when doing stuff.
    (overwriting non-grass/sand decals, etc)
  * Click-and-drag seems choppy in Win
- * Entity graphics aren't quite right for many entities
 
 Internal
 --------

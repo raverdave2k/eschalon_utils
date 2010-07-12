@@ -219,9 +219,7 @@ class B2GfxEntCache(GfxCache):
 
         # (and on our pixbuf copy as well)
         if (self.gdkcache is not None):
-            newbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, self.width, imgheight)
-            self.pixbuf.copy_area(0, 0, self.width, imgheight, newbuf, 0, 0)
-            self.pixbuf = newbuf
+            self.pixbuf = Gfx.surface_to_pixbuf(newsurf)
 
 class SingleImageGfxCache(GfxCache):
     """
@@ -297,7 +295,8 @@ class Gfx(object):
         """
         self.loaded = True
 
-    def surface_to_pixbuf(self, surface):
+    @staticmethod
+    def surface_to_pixbuf(surface):
         """
         Helper function to convert a Cairo surface to a GDK Pixbuf.  It's
         very slow, don't use it if you need speed.  It's probably about as
