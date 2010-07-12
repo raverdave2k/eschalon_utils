@@ -25,7 +25,7 @@ import math
 import zlib
 import cairo
 import gobject
-import StringIO
+import cStringIO
 from struct import unpack
 from eschalon import constants as c
 from eschalon.savefile import Savefile, LoadException
@@ -41,11 +41,11 @@ class GfxCache(object):
 
     def __init__(self, pngdata, width, height, cols, overlay_func=None):
         # First load the data as a Cairo surface
-        self.surface = cairo.ImageSurface.create_from_png(StringIO.StringIO(pngdata))
+        self.surface = cairo.ImageSurface.create_from_png(cStringIO.StringIO(pngdata))
 
         if overlay_func:
             self.surface = overlay_func(self.surface, width, height, cols)
-            df = StringIO.StringIO()
+            df = cStringIO.StringIO()
             self.surface.write_to_png(df)
             pngdata = df.getvalue()
             df.close()
@@ -304,7 +304,7 @@ class Gfx(object):
         found would require you to loop through and fix each pixel in the
         pixbuf afterwards.
         """
-        df = StringIO.StringIO()
+        df = cStringIO.StringIO()
         surface.write_to_png(df)
         loader = gtk.gdk.PixbufLoader()
         loader.write(df.getvalue())
@@ -629,8 +629,8 @@ class B2Gfx(Gfx):
         # First load in the background and its frame
         frame = self.readfile('icon_frame.png')
         background = self.readfile('%s_icon_blank.png' % (type))
-        framesurf = cairo.ImageSurface.create_from_png(StringIO.StringIO(frame))
-        backsurf = cairo.ImageSurface.create_from_png(StringIO.StringIO(background))
+        framesurf = cairo.ImageSurface.create_from_png(cStringIO.StringIO(frame))
+        backsurf = cairo.ImageSurface.create_from_png(cStringIO.StringIO(background))
 
         # Now create a new surface and tile the background over the whole thing
         newsurf = cairo.ImageSurface(cairo.FORMAT_ARGB32, surface.get_width(), surface.get_height())
