@@ -436,6 +436,7 @@ class B2Constants:
             42: 'Sound Generator (Wind)',
             43: 'Sound Generator (Swimming Water)',
             44: 'Sound Generator (Electric Field)',
+            50: 'Breakable Wall',
         }
 
     class EntHelper(object):
