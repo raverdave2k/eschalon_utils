@@ -2676,7 +2676,7 @@ class MapGUI(BaseGUI):
                 sq_ctx.paint()
                 drawn = True
                 # TODO: this object should really be a TYPE_OBJ instead...
-                if (self.req_book == 2 and square.wallimg == 349):
+                if (self.req_book == 2 and (square.wallimg == 349 or square.wallimg == 350)):
                     pixbuf = self.gfx.get_flame(self.curzoom)
                     if (pixbuf is not None):
                         xoffset = self.z_halfwidth-int(pixbuf.get_width()/2)+self.z_squarebuf_offset
@@ -2832,7 +2832,7 @@ class MapGUI(BaseGUI):
             (pixbuf, pixheight, offset) = self.gfx.get_object(square.wallimg, 52, True, self.map.tree_set)
             if (pixbuf is not None):
                 pixbuf.composite(comp_pixbuf, 0, 26*(4-pixheight), 52, 26*(pixheight+1), 0, 26*(4-pixheight), 1, 1, gtk.gdk.INTERP_NEAREST, 255)
-            if (self.req_book == 2 and square.wallimg == 349):
+            if (self.req_book == 2 and (square.wallimg == 349 or square.wallimg == 350)):
                 pixbuf = self.gfx.get_flame(52, True)
                 if (pixbuf is not None):
                     pixbuf.composite(comp_pixbuf, 17, 35, 18, 30, 17, 35, 1, 1, gtk.gdk.INTERP_NEAREST, 255)
