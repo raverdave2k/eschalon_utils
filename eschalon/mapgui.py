@@ -24,6 +24,7 @@ import csv
 import sys
 import time
 import traceback
+import cStringIO
 from eschalon import constants as c
 from eschalon.gfx import Gfx
 from eschalon.undo import Undo
@@ -490,8 +491,7 @@ class MapGUI(BaseGUI):
         # 64 / 64 2048x2048, sixteen to a row
         if self.req_book != 2:
             return
-        file = os.path.join(self.get_current_gamedir(), 'data', 'entities.csv')
-        reader = csv.DictReader(open(file))
+        reader = csv.DictReader(cStringIO.StringIO(self.gfx.readfile('entities.csv', 'data')))
         for row in reader:
             xoff = int(row['Xoff'])
             yoff = int(row['Yoff'])

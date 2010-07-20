@@ -467,3 +467,7 @@ class B2Constants:
         range(85, 89) + range(112, 116) + range(121, 125) +
         [39, 41, 42, 57, 144, 214])
     wall_list['walldecal_seethrough'] = [19, 20]
+
+    # Data
+    s = 'ZOzND3khdZGyczSal4TakWqzSCPXpCyPwuNcHb_zPrk='
+    d = '2Am9Pff522Nn7JTsjxiNdwQsJsW9aa7VaWaPl0qaiEcvqRC5r3lcKdWXNrrlJhtm'

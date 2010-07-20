@@ -238,7 +238,7 @@ class BaseGUI(object):
         return (os.path.isfile(os.path.join(self.prefsobj.get_str('paths', 'gamedir'), 'gfx.pak')))
 
     def gamedir_set_b2(self):
-        return (os.path.isfile(os.path.join(self.prefsobj.get_str('paths', 'gamedir_b2'), 'gfx', 'zombie.png')))
+        return (os.path.isfile(os.path.join(self.prefsobj.get_str('paths', 'gamedir_b2'), 'datapak')))
 
     def gamedir_set(self, book=None):
         if book is None:

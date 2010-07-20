@@ -24,7 +24,9 @@ import gtk
 import math
 import zlib
 import cairo
+import base64
 import gobject
+import zipfile
 import cStringIO
 from struct import unpack
 from eschalon import constants as c
@@ -577,6 +579,14 @@ class B2Gfx(Gfx):
 
     def __init__(self, prefs, datadir):
 
+        # Import Crypto stuff
+        try:
+            from Crypto.Cipher import AES
+            self.aesc = AES
+        except:
+            raise Exception('Book 2 Graphics requires pycrypto, please install it: http://www.dlitz.net/software/pycrypto/')
+        self.prep_crypt()
+
         # Wall object types
         for i in range(251):
             self.wall_types[i] = self.TYPE_OBJ
@@ -627,8 +637,8 @@ class B2Gfx(Gfx):
         """
 
         # First load in the background and its frame
-        frame = self.readfile('icon_frame.png')
-        background = self.readfile('%s_icon_blank.png' % (type))
+        frame = self.readfile('gfx/icon_frame.png')
+        background = self.readfile('gfx/%s_icon_blank.png' % (type))
         framesurf = cairo.ImageSurface.create_from_png(cStringIO.StringIO(frame))
         backsurf = cairo.ImageSurface.create_from_png(cStringIO.StringIO(background))
 
@@ -662,15 +672,27 @@ class B2Gfx(Gfx):
     def item_overlayfunc_weapon(self, surface, width, height, cols):
         return self.item_overlayfunc(surface, width, height, cols, 'weapon')
 
-    def readfile(self, filename):
+    def prep_crypt(self):
+        # Yes, I'm fully aware that all this munging about is merely obfuscation and
+        # wouldn't actually prevent anyone from getting to the data, but I feel
+        # obligated to go through the motions regardless.  Hi there!  Note that I 
+        # *did* get BW's permission to access the graphics data this way.
+        s = base64.urlsafe_b64decode(c.s)
+        d = base64.urlsafe_b64decode(c.d)
+        iv = d[:16]
+        self.aesenc = d[16:]
+        self.aes = self.aesc.new(s, self.aesc.MODE_CBC, iv)
+
+    def readfile(self, filename, dir='gfx'):
         """
         Reads a given filename.
         """
+        filename = '%s/%s' % (dir, filename)
         if self.loaded:
-            df = open(os.path.join(self.gamedir, 'gfx', filename))
-            filedata = df.read()
-            df.close()
-            return filedata
+            try:
+                return self.zip.read(filename)
+            except KeyError:
+                raiseLoadException('Filename %s not found in datapak!' % (filename))
         else:
             raise LoadException('We haven\'t initialized ourselves yet')
 
@@ -793,14 +815,25 @@ class B2Gfx(Gfx):
         return cache.getimg(direction, int(size*cache.size_scale), gdk)
 
     def get_avatar(self, avatarnum):
-        if (avatarnum < 0 or avatarnum > 7):
+        # TODO: fix custom pic logic here
+        if (avatarnum < 0 or avatarnum > 12):
             return None
         if (avatarnum not in self.avatarcache):
-            if (avatarnum == 7):
-                if (os.path.exists(os.path.join(self.prefs.get_str('paths', 'gamedir'), 'mypic.png'))):
-                    self.avatarcache[avatarnum] = gtk.gdk.pixbuf_new_from_file(os.path.join(self.prefs.get_str('paths', 'gamedir'), 'mypic.png'))
+            if (avatarnum == 0xFFFFFFFF):
+                if (os.path.exists(os.path.join(self.gamedir, 'mypic.png'))):
+                    self.avatarcache[avatarnum] = gtk.gdk.pixbuf_new_from_file(os.path.join(self.gamedir, 'mypic.png'))
                 else:
                     return None
             else:
                 self.avatarcache[avatarnum] = GfxCache(self.readfile('%d.png' % (avatarnum)), 60, 60, 1).pixbuf
         return self.avatarcache[avatarnum]
+
+    def initialread(self):
+        plain = self.aes.decrypt(self.aesenc)
+        pad = ord(plain[-1])
+        text = plain[:-pad]
+        
+        self.zip = zipfile.ZipFile(os.path.join(self.gamedir, 'datapak'), 'r')
+        self.zip.setpassword(text)
+
+        self.loaded = True
