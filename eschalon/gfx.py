@@ -646,8 +646,8 @@ class B2Gfx(Gfx):
         """
 
         # First load in the background and its frame
-        frame = self.readfile('gfx/icon_frame.png')
-        background = self.readfile('gfx/%s_icon_blank.png' % (type))
+        frame = self.readfile('icon_frame.png')
+        background = self.readfile('%s_icon_blank.png' % (type))
         framesurf = cairo.ImageSurface.create_from_png(cStringIO.StringIO(frame))
         backsurf = cairo.ImageSurface.create_from_png(cStringIO.StringIO(background))
 
@@ -701,7 +701,7 @@ class B2Gfx(Gfx):
             try:
                 return self.zip.read(filename)
             except KeyError:
-                raiseLoadException('Filename %s not found in datapak!' % (filename))
+                raise LoadException('Filename %s not found in datapak!' % (filename))
         else:
             raise LoadException('We haven\'t initialized ourselves yet')
 
