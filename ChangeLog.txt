@@ -1,5 +1,8 @@
 # ChangeLog for Eschalon Savefile Editor
 
+   28 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
+   Integration with czipfile and cleanup of Book 2 preferences
+
    11 Jul 2010; CJ Kucera <pez@apocalyptech.com> :
    Book 2 Map element lookup screens populate properly
    Torches and Zappers display in Book 2 maps

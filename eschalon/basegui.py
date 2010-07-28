@@ -91,8 +91,10 @@ class BaseGUI(object):
         self.prefs_savegame = self.prefsbuilder.get_object('savegame_chooser')
         self.prefs_savegame_b2 = self.prefsbuilder.get_object('savegame_b2_chooser')
         self.prefs_gamedir = self.prefsbuilder.get_object('gamedata_chooser')
+        self.prefs_gamedir_b2 = self.prefsbuilder.get_object('gamedata_b2_chooser')
         self.prefs_default_zoom = self.prefsbuilder.get_object('prefs_default_zoom')
         self.prefs_warn_global = self.prefsbuilder.get_object('prefs_warn_global')
+        self.prefs_warn_slowzip = self.prefsbuilder.get_object('prefs_warn_slowzip')
 
         # Explicitly set our widget names (needed for gtk+ 2.20 compatibility)
         # See https://bugzilla.gnome.org/show_bug.cgi?id=591085
@@ -122,9 +124,8 @@ class BaseGUI(object):
         # Set up prefs rows
         pixbuf = self.prefswindow.render_icon(gtk.STOCK_OPEN, gtk.ICON_SIZE_DIALOG)
         store.set(store.append(), 0, pixbuf, 1, 'File Locations', 2, 0)
-        if c.book == 1:
-            pixbuf = self.prefswindow.render_icon(gtk.STOCK_CLEAR, gtk.ICON_SIZE_DIALOG)
-            store.set(store.append(), 0, pixbuf, 1, 'Map Editor', 2, 1)
+        pixbuf = self.prefswindow.render_icon(gtk.STOCK_CLEAR, gtk.ICON_SIZE_DIALOG)
+        store.set(store.append(), 0, pixbuf, 1, 'Map Editor', 2, 1)
 
     def item_signals(self):
         """ Returns the signals that need to be attached for items. """
@@ -293,6 +294,8 @@ class BaseGUI(object):
             alert_changed = True
         else:
             alert_changed = False
+        if (self.prefsobj.get_int('mapgui', 'default_zoom')):
+            self.prefs_default_zoom.set_value(self.prefsobj.get_int('mapgui', 'default_zoom'))
         if c.book == 1:
             curdir = self.prefsobj.get_str('paths', 'gamedir')
             self.prefsbuilder.get_object('b1_dir_tab').show()
@@ -301,30 +304,36 @@ class BaseGUI(object):
                 self.prefs_savegame.set_current_folder(self.prefsobj.get_str('paths', 'savegames'))
             if (self.prefsobj.get_str('paths', 'gamedir') != ''):
                 self.prefs_gamedir.set_current_folder(self.prefsobj.get_str('paths', 'gamedir'))
-            if (self.prefsobj.get_int('mapgui', 'default_zoom')):
-                self.prefs_default_zoom.set_value(self.prefsobj.get_int('mapgui', 'default_zoom'))
         else:
-            curdir = ''
+            curdir = self.prefsobj.get_str('paths', 'gamedir_b2')
             self.prefsbuilder.get_object('b1_dir_tab').hide()
             self.prefsbuilder.get_object('b2_dir_tab').show()
             if (self.prefsobj.get_str('paths', 'savegames_b2') != ''):
                 self.prefs_savegame_b2.set_current_folder(self.prefsobj.get_str('paths', 'savegames_b2'))
+            if (self.prefsobj.get_str('paths', 'gamedir_b2') != ''):
+                self.prefs_gamedir_b2.set_current_folder(self.prefsobj.get_str('paths', 'gamedir_b2'))
         self.prefs_warn_global.set_active(self.prefsobj.get_bool('mapgui', 'warn_global_map'))
+        self.prefs_warn_slowzip.set_active(self.prefsobj.get_bool('mapgui', 'warn_slow_zip'))
         #self.prefsnotebook.set_current_page(0)
         self.prefswindow.set_transient_for(self.window)
         response = self.prefswindow.run()
         self.prefswindow.hide()
         if (response == gtk.RESPONSE_OK):
+            self.prefsobj.set_int('mapgui', 'default_zoom', self.prefs_default_zoom.get_value_as_int())
+            self.prefsobj.set_bool('mapgui', 'warn_global_map', self.prefs_warn_global.get_active())
+            self.prefsobj.set_bool('mapgui', 'warn_slow_zip', self.prefs_warn_slowzip.get_active())
             if c.book == 1:
                 self.prefsobj.set_str('paths', 'savegames', self.prefs_savegame.get_filename())
                 self.prefsobj.set_str('paths', 'gamedir', self.prefs_gamedir.get_filename())
-                self.prefsobj.set_int('mapgui', 'default_zoom', self.prefs_default_zoom.get_value_as_int())
-                self.prefsobj.set_bool('mapgui', 'warn_global_map', self.prefs_warn_global.get_active())
                 # TODO: Should check for valid dirs here?
                 if (curdir != self.prefsobj.get_str('paths', 'gamedir')):
                     changed = True
             else:
                 self.prefsobj.set_str('paths', 'savegames_b2', self.prefs_savegame_b2.get_filename())
+                self.prefsobj.set_str('paths', 'gamedir_b2', self.prefs_gamedir_b2.get_filename())
+                # TODO: Should check for valid dirs here?
+                if (curdir != self.prefsobj.get_str('paths', 'gamedir_b2')):
+                    changed = True
             self.prefsobj.save()
         return (changed, alert_changed)
 

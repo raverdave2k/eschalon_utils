@@ -26,11 +26,17 @@ import zlib
 import cairo
 import base64
 import gobject
-import zipfile
 import cStringIO
 from struct import unpack
 from eschalon import constants as c
 from eschalon.savefile import Savefile, LoadException
+
+try:
+    import czipfile as zipfile
+    fast_zipfile = True
+except ImportError:
+    import eschalon.fzipfile as zipfile
+    fast_zipfile = False
 
 class GfxCache(object):
     """
@@ -263,6 +269,9 @@ class Gfx(object):
 
         self.prefs = prefs
         self.datadir = datadir
+
+        # Store whether or not we have fast zip decryption
+        self.fast_zipfile = fast_zipfile
 
         # wtf @ needing this (is the same for B1 and B2)
         self.treemap = {

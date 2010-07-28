@@ -254,6 +254,21 @@ class MapGUI(BaseGUI):
             return
         self.gfx = Gfx.new(self.req_book, self.prefs, self.datadir)
 
+        # Show a slow-loading zip warning if necessary
+        if not self.gfx.fast_zipfile:
+            self.get_widget('render_slowzip_warning').show()
+            self.drawstatuswindow.set_size_request(350, 200)
+            warn = self.prefs.get_bool('mapgui', 'warn_slow_zip')
+            if warn:
+                dialog = self.get_widget('slowzipwarndialog')
+                resp = dialog.run()
+                if(self.get_widget('slowzipwarn_check').get_active() != warn):
+                    self.prefs.set_bool('mapgui', 'warn_slow_zip', self.get_widget('slowzipwarn_check').get_active())
+                    self.prefs.save()
+                dialog.hide()
+                if resp != gtk.RESPONSE_OK:
+                    sys.exit(1)
+
         # Now that we're sure we have a data dir, load in our entities
         self.populate_entities()
 
